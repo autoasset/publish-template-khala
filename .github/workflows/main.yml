@@ -34,7 +34,7 @@ jobs:
            rm -rf project/.git
            rm -rf project/.github
            rm -rf project/.gitignore 
-           cp -r  project/. ./
+           rsync -aP project/. ./
            rm -rf project
 
       - name: Setup Node.js environment
