@@ -23,18 +23,21 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-#       - name: Setup Node.js environment
-#         uses: actions/setup-node@v2.4.1
-
-      - name: ls
+      - name: rm files
         run: |
            shopt -s extglob
            rm -rf !(@(.git|.github))
-           rm -rf !(@(.git|.github)) *.
+     
+      - name: download
+        run: |
+           git clone https://github.com/autoasset/Khala project
+           rm -rf project/.git
+           rm -rf project/.github
+           cp -r  project/. ./
+           rm -rf project
 
-        
-#       - name: clear-files
-#         run: rm -rf `ls | grep -v ".git"`
+#       - name: Setup Node.js environment
+#         uses: actions/setup-node@v2.4.1
       
       - name: ls
         run: ls -a
