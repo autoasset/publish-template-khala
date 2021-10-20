@@ -42,7 +42,6 @@ class SVGCoverter {
 
         const options = {
             floatPrecision: 3, // 数值精度，默认为 2
-            fillBlack: true, // 为无填充变成填充黑色，默认为 false
             xmlTag: true // 添加 XML 文档声明标签，默认为 false
         }
 
