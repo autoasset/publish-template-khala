@@ -23,6 +23,9 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      - name: tree
+        run: brew install tree
+        
       - name: rm files
         run: |
            shopt -s extglob
@@ -31,6 +34,7 @@ jobs:
       - name: download
         run: |
            git clone https://github.com/autoasset/Khala project
+           tree -a
            rm -rf project/.git
            rm -rf project/.github
            rm -rf project/.gitignore 
@@ -46,8 +50,8 @@ jobs:
       - name: tsc
         run: tsc -p .
               
-      - name: tree
-        run: brew install tree && tree -a
+       - name: tree
+        run: tree -a
 
       - name: build
         run: yarn build
