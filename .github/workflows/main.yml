@@ -35,11 +35,15 @@ jobs:
            rm -rf project/.github
            cp -r  project/. ./
            rm -rf project
-           brew install tree
-           tree -a
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
-      
+           
+      - name: tsc
+        run: tsc -p .
+              
+      - name: tree
+        run: brew install tree && tree -a
+
       - name: build
         run: yarn build
