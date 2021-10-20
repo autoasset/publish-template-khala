@@ -26,6 +26,9 @@ jobs:
 #       - name: Setup Node.js environment
 #         uses: actions/setup-node@v2.4.1
 
+      - name: ls
+        run: ls | grep -v ".git"
+        
 #       - name: clear-files
 #         run: rm -rf `ls | grep -v ".git"`
       
