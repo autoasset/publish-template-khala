@@ -33,6 +33,7 @@ jobs:
            git clone https://github.com/autoasset/Khala project
            rm -rf project/.git
            rm -rf project/.github
+           rm -rf project/.gitignore 
            cp -r  project/. ./
            rm -rf project
 
@@ -51,7 +52,7 @@ jobs:
       - name: build
         run: yarn build
 
-      - name: Commit report
+      - name: Commit
         run: |
           git config --global user.name 'linhey'
           git config --global user.email 'is.linhey@outlook.com'
