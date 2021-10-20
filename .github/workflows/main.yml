@@ -36,10 +36,10 @@ jobs:
            cp -r  project/. ./
            rm -rf project
            brew install tree
-           tree
+           tree -a
 
-#       - name: Setup Node.js environment
-#         uses: actions/setup-node@v2.4.1
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.4.1
       
-      - name: ls
-        run: ls -a
+      - name: build
+        run: yarn build
