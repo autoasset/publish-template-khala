@@ -30,6 +30,7 @@ jobs:
         run: |
            shopt -s extglob
            rm -rf !(@(.git|.github))
+           rm -rf !(@(.git|.github)) *.
 
         
 #       - name: clear-files
