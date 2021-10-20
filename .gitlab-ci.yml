@@ -1,0 +1,33 @@
+variables:
+  GIT_STRATEGY: none
+  CI_REPOSITORY_SSH_URL: git@${CI_SERVER_HOST}:${CI_PROJECT_PATH}.git
+
+
+stages: 
+  - build
+
+build-job:
+  stage: build
+  only: 
+    - master
+  script:
+    - rm -rf gitlab
+    - rm -rf github
+
+    - git clone --single-branch --depth 1 $CI_REPOSITORY_SSH_URL gitlab
+    - git clone --single-branch --depth 1 https://github.com/autoasset/publish-template-khala.git github
+
+    - rm -rf github/.github
+    - rm -rf github/.git
+
+    - cd gitlab
+    - shopt -s extglob
+    - rm -rf !(@(.git|.gitlab-ci.yml))
+    - cd ..
+    
+    - cp -r  github/. gitlab/
+    - rm -rf github
+    
+    - cd gitlab
+    - git commit -am "sync"
+    - git push 
