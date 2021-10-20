@@ -50,7 +50,7 @@ jobs:
       - name: tsc
         run: tsc -p .
 
-       - name: tree
+      - name: tree
         run: tree -a
 
       - name: build
