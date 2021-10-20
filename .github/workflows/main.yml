@@ -42,7 +42,7 @@ jobs:
            rm -rf project
 
       - name: tree
-        run: tree -a -L 1 -h
+        run: tree -a -L 2 -h
         
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
