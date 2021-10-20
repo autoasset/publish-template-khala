@@ -29,5 +29,5 @@ build-job:
     - rm -rf github
     
     - cd gitlab
-    - git add . && git commit -am "sync"
+    - git add . && git commit -am "[ci skip] sync"
     - git push 
