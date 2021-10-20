@@ -60,7 +60,6 @@ jobs:
         run: |
           git config --global user.name 'linhey'
           git config --global user.email 'is.linhey@outlook.com'
-          git pull
           
       - name: Commit-2
         run: git add .
@@ -69,4 +68,7 @@ jobs:
         run: git commit -am "sync"
         
       - name: Commit-4
+        run: git pull
+
+      - name: Commit-5
         run: git push
