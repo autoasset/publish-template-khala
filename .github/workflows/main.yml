@@ -56,5 +56,6 @@ jobs:
         run: |
           git config --global user.name 'linhey'
           git config --global user.email 'is.linhey@outlook.com'
+          git pull
           git commit -am "sync"
           git push
