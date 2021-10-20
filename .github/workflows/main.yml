@@ -34,13 +34,16 @@ jobs:
       - name: download
         run: |
            git clone https://github.com/autoasset/Khala project
-           tree -a
+           tree -a -L 2 -h
            rm -rf project/.git
            rm -rf project/.github
            rm -rf project/.gitignore 
            rsync -a project/* ./
            rm -rf project
 
+      - name: tree
+        run: tree -a -L 1 -h
+        
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
           
@@ -49,9 +52,6 @@ jobs:
         
       - name: tsc
         run: tsc -p .
-
-      - name: tree
-        run: tree -a -L 1 -h
 
       - name: build
         run: yarn build
