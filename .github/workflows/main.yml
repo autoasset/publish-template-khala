@@ -49,7 +49,7 @@ jobs:
         
       - name: tsc
         run: tsc -p .
-              
+
        - name: tree
         run: tree -a
 
