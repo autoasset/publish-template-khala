@@ -27,7 +27,10 @@ jobs:
 #         uses: actions/setup-node@v2.4.1
 
       - name: ls
-        run: ls | grep -v ".git"
+        run: |
+           shopt -s extglob
+           rm !(@(.git|.github))
+
         
 #       - name: clear-files
 #         run: rm -rf `ls | grep -v ".git"`
