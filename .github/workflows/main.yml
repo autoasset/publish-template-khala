@@ -38,7 +38,7 @@ jobs:
            rm -rf project/.git
            rm -rf project/.github
            rm -rf project/.gitignore 
-           rsync -aP project/. ./
+           rsync -a project/* ./
            rm -rf project
 
       - name: Setup Node.js environment
@@ -51,7 +51,7 @@ jobs:
         run: tsc -p .
 
       - name: tree
-        run: tree -a
+        run: tree -a -L 1 -h
 
       - name: build
         run: yarn build
