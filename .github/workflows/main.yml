@@ -56,10 +56,17 @@ jobs:
       - name: build
         run: yarn build
 
-      - name: Commit
+      - name: Commit-1
         run: |
           git config --global user.name 'linhey'
           git config --global user.email 'is.linhey@outlook.com'
           git pull
-          git add . && git commit -am "sync"      
-          git push
+          
+      - name: Commit-2
+        run: git add .
+          
+      - name: Commit-3
+        run: git commit -am "sync"
+        
+      - name: Commit-4
+        run: git push
