@@ -67,9 +67,6 @@ jobs:
           
       - name: Commit-3
         run: git commit -am "sync"
-        
-      - name: Commit-4
-        run: git pull
 
-      - name: Commit-5
+      - name: Commit-4
         run: git push
