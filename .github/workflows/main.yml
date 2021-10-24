@@ -58,6 +58,7 @@ jobs:
 
       - name: Commit-1
         run: |
+          git config --global pull.ff only
           git config --global user.name 'linhey'
           git config --global user.email 'is.linhey@outlook.com'
           
