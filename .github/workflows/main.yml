@@ -48,10 +48,10 @@ jobs:
         uses: actions/setup-node@v2.4.1
         
       - name: yarn-install
-        run: npm install -g typescript
-        
-      - name: yarn-install
         run: yarn install
+        
+      - name: typescript-install
+        run: yarn add typescript
         
       - name: tsc
         run: tsc -p .
