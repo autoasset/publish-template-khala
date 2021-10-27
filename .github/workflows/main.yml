@@ -51,15 +51,13 @@ jobs:
         run: yarn install
         
       - name: typescript-install
-        run: |
-          yarn add typescript
-          npm install -g typescript
+        run: npm install -g typescript
         
       - name: tsc
         run: tsc -p .
 
       - name: build
-        run: yarn build
+        run: yarn dev
 
       - name: Commit-1
         run: |
