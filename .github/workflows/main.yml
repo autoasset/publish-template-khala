@@ -46,7 +46,10 @@ jobs:
         
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
-          
+        
+      - name: yarn-install
+        run: npm install -g typescript
+        
       - name: yarn-install
         run: yarn install
         
