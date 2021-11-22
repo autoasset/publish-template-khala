@@ -57,7 +57,7 @@ jobs:
         run: tsc -p .
 
       - name: build
-        run: yarn dev
+        run: yarn build
 
       - name: Commit-1
         run: |
