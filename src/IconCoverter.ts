@@ -65,7 +65,6 @@ class IconCoverter {
                 .toFile(FilePath.path(outputs.icon2x, filename))
             fs.copyFile(path, FilePath.path(outputs.icon3x, filename))
         } else if (metadata.format == 'svg') {
-            fs.copyFile(path, FilePath.path(outputs.svg, filename))
             await svgCoverter(path, filename)
         } else {
             fs.copyFile(path, FilePath.path(outputs.other, filename))

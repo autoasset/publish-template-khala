@@ -2,6 +2,7 @@ import config from "./config";
 import * as fs from "fs/promises";
 import svg2vectordrawable from "svg2vectordrawable";
 import FilePath from "./FilePath"
+import { optimize } from "svgo"
 
 class Glyphs {
     name: string
@@ -52,10 +53,54 @@ class SVGCoverter {
     }
 
     async run(coverter: SVGCoverter, file: string, name: string) {
-        const data = await fs.readFile(file)
-        await coverter.pdf(coverter, file, name, data)
-        await coverter.vectordrawable(coverter, file, name, data)
-        await coverter.iconfontGlyphs(coverter, file, name, data)
+        const result = optimize(await fs.readFile(file), {
+            path: file,
+            plugins: [
+                "removeDoctype",
+                "removeXMLProcInst",
+                "removeComments",
+                "removeMetadata",
+                "removeTitle",
+                "removeDesc",
+                "removeUselessDefs",
+                "removeXMLNS",
+                "removeEditorsNSData",
+                "removeEmptyAttrs",
+                "removeHiddenElems",
+                "removeEmptyText",
+                "removeEmptyContainers",
+                "removeUnknownsAndDefaults",
+                "removeNonInheritableGroupAttrs",
+                "removeUselessStrokeAndFill",
+                "removeUnusedNS",
+                "removeScriptElement",
+                {
+                    name: 'SetDefaultWidthHeightUnitToPT',
+                    type: 'perItem', // 'perItem', 'perItemReverse' or 'full'
+                    fn: (item, params, info) => {
+                        if (item.type === 'element' && item.name === 'svg') {
+                            if (item.attributes.width != null && Number.isNaN(Number(item.attributes.width)) === false) {
+                                const width = Number(item.attributes.width);
+                                item.attributes.width = `${width}pt`
+                            }
+                            if (item.attributes.height != null && Number.isNaN(Number(item.attributes.height)) === false) {
+                                const height = Number(item.attributes.height);
+                                item.attributes.height = `${height}pt`
+                            }
+                        }
+                    },
+                }
+            ],
+            js2svg: { pretty: true }
+        })
+
+        const data = Buffer.from(result.data, 'utf8');
+        const path = FilePath.path(config.outputs.svg, name)
+
+        await fs.writeFile(path, result.data)
+        await coverter.pdf(coverter, path, name, data)
+        await coverter.vectordrawable(coverter, path, name, data)
+        await coverter.iconfontGlyphs(coverter, path, name, data)
     }
 
     async iconfontGlyphs(coverter: SVGCoverter, file: string, name: string, data: Buffer) {
