@@ -14,7 +14,7 @@ class IconCoverter {
             }
         }
 
-        console.log("正在处理文件夹: " + folder)
+        console.log("正在处理文件夹: " + folder.replace(process.cwd(),''))
         for (const item of await fs.readdir(folder)) {
             if (item.startsWith('.')) {
                 continue
@@ -39,10 +39,10 @@ class IconCoverter {
                 await this.runInFolder(path, svgCoverter)
             } else {
                 try {
-                    console.log("正在处理图片文件: " + path)
+                    console.log("正在处理图片文件: " + path.replace(process.cwd(),''))
                     await this.runForFile(path, item, svgCoverter)
                 } catch (error) {
-                    console.log("无法识别为图片的文件: " + path)
+                    console.log("无法识别为图片的文件: " + path.replace(process.cwd(),''))
                 }
             }
         }
