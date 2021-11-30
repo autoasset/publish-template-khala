@@ -21,9 +21,9 @@ const spawnSyncOptions = {
 
 const mkdirSync = function (dirPath) {
   try {
-    fs.mkdirSync(dirPath);
+    fs.mkdirSync(dirPath, { recursive: true });
   } catch (err) {
-    /* istanbul ignore if */
+    /* istanbul ignore next */
     if (err.code !== 'EEXIST') {
       throw err;
     }
@@ -67,23 +67,8 @@ const globalLibvipsVersion = function () {
 };
 
 const hasVendoredLibvips = function () {
-  const currentPlatformId = platform();
-  const vendorPath = path.join(__dirname, '..', 'vendor', minimumLibvipsVersion);
-  let vendorPlatformId;
-  try {
-    vendorPlatformId = require(path.join(vendorPath, 'platform.json'));
-  } catch (err) {}
-  /* istanbul ignore else */
-  if (vendorPlatformId) {
-    /* istanbul ignore else */
-    if (currentPlatformId === vendorPlatformId) {
-      return true;
-    } else {
-      throw new Error(`'${vendorPlatformId}' binaries cannot be used on the '${currentPlatformId}' platform. Please remove the 'node_modules/sharp' directory and run 'npm install' on the '${currentPlatformId}' platform.`);
-    }
-  } else {
-    return false;
-  }
+  const vendorPath = path.join(__dirname, '..', 'vendor', minimumLibvipsVersion, platform());
+  return fs.existsSync(vendorPath);
 };
 
 const pkgConfigPath = function () {

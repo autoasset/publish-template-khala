@@ -115,7 +115,7 @@ class IconConfig {
     outputs: Outputs
     products: Products
 
-    constructor() {
+    constructor(path: string) {
         this.inputs = config.inputs.map((item) => filePath(item))
         this.exclude = config.exclude.map((item) => filePath(item))
         this.outputs = new Outputs()
@@ -124,4 +124,4 @@ class IconConfig {
 
 }
 
-export = new IconConfig()
+export = IconConfig
