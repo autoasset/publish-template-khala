@@ -25,7 +25,8 @@ class IconIterator implements FileIteratorNext {
     }
 
     async add(path: string) {
-        const file = sharp(path, { animated: true })
+        try {
+            const file = sharp(path, { animated: true })
         const metadata = await file.metadata()
 
         if (metadata.format == 'gif') {
@@ -48,6 +49,9 @@ class IconIterator implements FileIteratorNext {
         }
 
         FilePath.copyToFolder(this.config.outputs.other, FilePath.basename(path))
+        } catch (error) {
+            console.log(`IconIterator: 无法解析 ${path}`)
+        }
     }
 
     async dealImage3x(file: sharp.Sharp, path: string, metadata: sharp.Metadata, folder: string) {

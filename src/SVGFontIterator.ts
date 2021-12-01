@@ -67,7 +67,7 @@ class SVGFontIterator implements SVGFileIteratorNext {
           
         for (const glyph of this.glyphs) {
             const data = await fs.readFile(glyph.file)
-            font.setSvg(glyph.unicode, data.toString())
+            font.setSvg(glyph.unicode_value, data.toString())
         }
 
         const path = FilePath.filePath(folder, FilePath.filename("iconfont", ""))
