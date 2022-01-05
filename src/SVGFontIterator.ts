@@ -1,7 +1,9 @@
 import SVGFileIteratorNext from "./SVGFileIteratorNext";
-import IconConfig from "./config";
 import fs from "fs/promises";
 import FilePath from "./FilePath";
+import Coverter from "./Config/Coverter";
+import CoverterOutputType from "./Config/CoverterOutputType";
+import CoverterType from "./Config/CoverterType";
 
 class Glyphs {
     name: string
@@ -25,25 +27,27 @@ class Glyphs {
 
 class SVGFontIterator implements SVGFileIteratorNext {
 
-    config: IconConfig
+    coverters: Coverter[]
     glyphs: Glyphs[] = []
 
-    constructor(config: IconConfig) {
-        this.config = config
+    constructor(coverters: Coverter[]) {
+        this.coverters = coverters.filter((item) => {
+            return item.type == CoverterType.svg && item.output.type == CoverterOutputType.iconfont
+        })
     }
 
     public async prepare() {
-        await FilePath.createFolder(this.config.outputs.svg2iconfont)
-        await FilePath.createFolder(this.config.outputs.svg2custom_iconfont)
+
     }
 
     public async add(file: string) {
-        await this.addGlyph(FilePath.filename(FilePath.basename(file), ""), file)
+        await this.addGlyph(FilePath.basename(file).name, file)
     }
 
     public async finish() {
-        await this.output(this.config.outputs.svg2iconfont, 'iconfont')
-        await this.output(this.config.outputs.svg2custom_iconfont, this.config.outputs.custom_iconfont_family)
+        for (const item of this.coverters) {
+            await this.output(item.output.path, item.output.iconfont_family_name, item.output.iconfont_font_name)
+        }
     }
 
     private async addGlyph(basename: string, file: string) {
@@ -52,19 +56,19 @@ class SVGFontIterator implements SVGFileIteratorNext {
         this.glyphs.push(new Glyphs(basename, "iconfont", unicode, unicodeHex, file))
     }
 
-    private async output(folder: string, fontFamily: string) {
-       await this.writeTTF(folder, fontFamily)
-       await this.writeJSON(folder, fontFamily)
-       await this.writeHTML(folder, fontFamily)
+    private async output(folder: string, fontFamily: string, fontName: string) {
+        await this.writeTTF(folder, fontFamily, fontName)
+        await this.writeJSON(folder, fontFamily, fontName)
+        await this.writeHTML(folder, fontFamily, fontName)
     }
 
-    private async writeTTF(folder: string, fontFamily: string) {
+    private async writeTTF(folder: string, fontFamily: string, fontName: string) {
         var font = require('font-carrier').create();
         const ttfOptions = font.getFontface().options;
         ttfOptions.fontFamily = fontFamily;
-        font.options.id = fontFamily;
-        font.setFontface(ttfOptions);      
-          
+        font.options.id = fontName;
+        font.setFontface(ttfOptions);
+
         for (const glyph of this.glyphs) {
             const data = await fs.readFile(glyph.file)
             font.setSvg(glyph.unicode_value, data.toString())
@@ -74,15 +78,16 @@ class SVGFontIterator implements SVGFileIteratorNext {
         font.output({ path: path, types: ['ttf'] })
     }
 
-    private async writeJSON(folder: string, fontFamily: string) {
-            const path = FilePath.filePath(folder, FilePath.filename("iconfont", "json"))
-            await fs.writeFile(path, JSON.stringify({
-                font_family: fontFamily,
-                glyphs: this.glyphs,
-            }, null, 2))
+    private async writeJSON(folder: string, fontFamily: string, fontName: string) {
+        const path = FilePath.filePath(folder, FilePath.filename("iconfont", "json"))
+        await fs.writeFile(path, JSON.stringify({
+            font_family: fontFamily,
+            font_name: fontName,
+            glyphs: this.glyphs,
+        }, null, 2))
     }
 
-    private async writeHTML(folder: string, fontFamily: string) {
+    private async writeHTML(folder: string, fontFamily: string, fontName: string) {
         var HTML = `<style type="text/css">
         @font-face {
             font-family: '${fontFamily}';

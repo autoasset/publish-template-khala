@@ -1,52 +1,60 @@
 
 import SVGFileIteratorNext from "./SVGFileIteratorNext";
-import IconConfig from "./config";
 import svg2vectordrawable from "svg2vectordrawable";
 import fs from "fs/promises";
 import FilePath from "./FilePath";
 import { optimize } from "svgo"
+import Coverter from "./Config/Coverter";
+import CoverterOutput from "./Config/CoverterOutput";
+import CoverterOutputType from "./Config/CoverterOutputType";
+import CoverterType from "./Config/CoverterType";
 
 class SVGIterator implements SVGFileIteratorNext {
 
-    config: IconConfig
+    coverters: Coverter[]
 
     private vectordrawableOptions = {
         floatPrecision: 3, // 数值精度，默认为 2
         xmlTag: true // 添加 XML 文档声明标签，默认为 false
     }
 
-    constructor(config: IconConfig) {
-        this.config = config
+    constructor(coverters: Coverter[]) {
+        this.coverters = coverters.filter((item) => {
+            return item.type == CoverterType.svg && item.output.type != CoverterOutputType.iconfont
+        })
     }
 
     public async prepare() {
-        await FilePath.createFolder(this.config.outputs.svg2xml)
-        await FilePath.createFolder(this.config.outputs.svg2pdf)
-        await FilePath.createFolder(this.config.outputs.svg2iconfont)
-        await FilePath.createFolder(this.config.outputs.svg2custom_iconfont)
+
     }
 
     public async add(file: string) {
         const buffer = await this.compression(await fs.readFile(file))
-        const basename = FilePath.basename(file)
-        await this.vectordrawable(basename, buffer, file)
-        await this.pdf(basename, await this.fixedMissiPtUnits(buffer), file)
+        const basename = FilePath.basename(file).name
+
+        for (const coverter of this.coverters) {
+            if (coverter.output.type == CoverterOutputType.pdf) {
+                await this.pdf(basename, coverter.output, await this.fixedMissiPtUnits(buffer), file)
+            } else if (coverter.output.type == CoverterOutputType.vector_drawable) {
+                await this.vectordrawable(basename, coverter.output, buffer, file)
+            }
+        }
     }
 
     public async finish() {
 
     }
 
-    private async pdf(basename: string, buffer: Buffer, filepath: string) {
+    private async pdf(basename: string, output: CoverterOutput, buffer: Buffer, filepath: string) {
         const filename = FilePath.filename(basename, 'pdf')
-        const path = FilePath.filePath(this.config.outputs.svg2pdf, filename)
+        const path = FilePath.filePath(output.path, filename)
         require('shelljs').exec('inkscape ' + filepath + ' --export-type=pdf --export-filename=' + path)
     }
 
-    private async vectordrawable(basename: string, buffer: Buffer, filepath: string) {
+    private async vectordrawable(basename: string, output: CoverterOutput, buffer: Buffer, filepath: string) {
         const xml = await svg2vectordrawable(buffer.toString(), this.vectordrawableOptions)
         const filename = FilePath.filename(basename, 'xml')
-        const path = FilePath.filePath(this.config.outputs.svg2xml, filename)
+        const path = FilePath.filePath(output.path, filename)
         await fs.writeFile(path, xml)
     }
 

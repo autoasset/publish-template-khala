@@ -1,24 +1,27 @@
-import IconConfig from "./config";
 import FilePath from "./FilePath";
 import FileIteratorNext from "./FileIteratorNext";
 import Path from "path";
 import * as fs from "fs/promises";
+import IconTask from "./Config/IconTask";
+import Coverter from "./Config/Coverter";
+import CoverterType from "./Config/CoverterType";
+import CoverterOutputType from "./Config/CoverterOutputType";
 
 class FileIterator {
 
-    config: IconConfig
+    task: IconTask
+    coverters: Coverter[]
     nexts: FileIteratorNext[]
 
-    constructor(config: IconConfig, nexts: FileIteratorNext[]) {
-        this.config = config
+    constructor(task: IconTask, nexts: FileIteratorNext[]) {
+        this.task = task
         this.nexts = nexts
+        this.coverters = task.coverters.filter((item) => {
+           return item.type == CoverterType.file && item.output.type == CoverterOutputType.file
+        })
     }
 
     async prepare() {
-        /// 清理输出文件夹
-        await this.delete(this.config.outputs.allPaths)
-        await this.createDirs(this.config.outputs.allPaths)
-
         for (const next of this.nexts) {
             await next.prepare()
         }
@@ -31,7 +34,7 @@ class FileIterator {
     }
 
     async run() {
-        for (const path of this.config.inputs) {
+        for (const path of this.task.inputs) {
             await this.forward(path)
         }
     }
@@ -52,8 +55,14 @@ class FileIterator {
         if (stat.isDirectory()) {
             await this.scan(path)
         } else if (stat.isFile()) {
-            for (const next of this.nexts) {
-                await next.add(path)
+            if (this.coverters.length > 0) {
+                for (const coverter of this.coverters) {
+                    await FilePath.copyToFolder(coverter.output.path, path)
+                }
+            } else {
+                for (const next of this.nexts) {
+                    await next.add(path)
+                }
             }
         } else {
             console.log(`scan: ${path} 无法识别的文件类型`)
@@ -66,7 +75,7 @@ class FileIterator {
             return false
         }
         /// 是否在排除列表
-        for (const exclude of this.config.exclude) {
+        for (const exclude of this.task.ignore) {
             if (path.startsWith(exclude)) {
                 return false
             }

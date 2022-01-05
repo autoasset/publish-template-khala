@@ -36,14 +36,8 @@ class FilePath {
     }
 
     static filename(name: string, extension: string): string {
-        const index = name.indexOf('.')
-        var list: string[] = []
-        if (index == -1) {
-            list = [name, extension]
-        } else {
-            list = [name.substring(0, index), extension]
-        }
-        return list.filter(item => item).join(".")
+        const basename = this.basename(name)
+        return [basename.name, extension].filter(item => item).join(".")
     }
 
     static filePath(folder: string, filename: string): string {
@@ -52,8 +46,16 @@ class FilePath {
         return Path.resolve(paths.join(Path.sep))
     }
 
-    static basename(path: string): string {
-        return Path.basename(path)
+    static basename(path: string): { name: string, ext: string, full: string } {
+        const full = Path.basename(path)
+        var ext = ""
+
+        const index = full.indexOf('.')
+        if (index == -1) {
+            return { name: full, ext: ext, full: full }
+        } else {
+            return { name: full.substring(0, index), ext: full.substring(index+1, full.length), full: full }
+        }
     }
 
     static async copyToFolder(folder: string, path: string, rename?: string) {
@@ -61,7 +63,12 @@ class FilePath {
         const filename = rename ?? Path.basename(path)
         const dest = this.filePath(folder, filename)
         await this.createFolder(this.folder(dest))
-        fs.copyFile(path, dest)
+        await this.copyFile(path, dest)
+     }
+
+     static async copyFile(src: string, dest: string, mode?: number) {
+        fs.copyFile(src, dest, mode)
+
      }
 
     static async delete(path: string) {

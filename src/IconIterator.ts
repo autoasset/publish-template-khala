@@ -1,24 +1,29 @@
 import FileIteratorNext from "./FileIteratorNext";
 import sharp from 'sharp';
-import IconConfig from "./config";
 import FilePath from "./FilePath";
 import SVGFileIteratorNext from "./SVGFileIteratorNext";
+import Coverter from "./Config/Coverter";
+import CoverterType from "./Config/CoverterType";
 
 class IconIterator implements FileIteratorNext {
 
-    config: IconConfig
+    coverters: Record<string, Coverter[]>
     nexts: SVGFileIteratorNext[]
 
-    constructor(config: IconConfig, nexts: SVGFileIteratorNext[]) {
-        this.config = config
+    constructor(coverters: Coverter[], nexts: SVGFileIteratorNext[]) {
+        this.coverters = {}
+        coverters.filter((item) => {
+            return item.type == CoverterType.icon || item.type == CoverterType.gif
+        }).forEach((item) => {
+            if (!this.coverters[item.type.rawValue]) {
+                this.coverters[item.type.rawValue] = []
+            }
+            this.coverters[item.type.rawValue].push(item)
+        })
         this.nexts = nexts
     }
 
     async prepare() {
-        await FilePath.createFolder(this.config.outputs.gif3x)
-        await FilePath.createFolder(this.config.outputs.gif2x)
-        await FilePath.createFolder(this.config.outputs.icon3x)
-        await FilePath.createFolder(this.config.outputs.icon2x)
         for (const next of this.nexts) {
             await next.prepare()
         }
@@ -27,54 +32,48 @@ class IconIterator implements FileIteratorNext {
     async add(path: string) {
         try {
             const file = sharp(path, { animated: true })
-        const metadata = await file.metadata()
+            const metadata = await file.metadata()
 
-        if (metadata.format == 'gif') {
-            this.dealImage3x(file, path, metadata, this.config.outputs.gif3x)
-            this.dealImage3x(file, path, metadata, this.config.outputs.gif2x)
-            return
-        }
+            if (metadata.format == "svg") {
+                for (const next of this.nexts) {
+                    await next.add(path)
+                }
+                return
+            } 
+            
+            if (metadata.format == "gif") {
+                for (const item of this.coverters[CoverterType.gif.rawValue]) {
+                    await FilePath.copyToFolder(item.output.path, path)
+                }
+                return
+            } 
+            
+            if (metadata.format == 'png' || metadata.format == 'jpg' || metadata.format == 'jpeg') {
+                if (metadata.width == undefined || metadata.height == undefined) {
+                    return
+                }
 
-        if (metadata.format == 'png' || metadata.format == 'jpg' || metadata.format == 'jpeg') {
-            this.dealImage3x(file, path, metadata, this.config.outputs.icon3x)
-            this.dealImage2x(file, path, metadata, this.config.outputs.icon2x)
-            return
-        }
+                for (const item of this.coverters[CoverterType.icon.rawValue]) {
+                    const basename = FilePath.basename(path)
+                    const output = FilePath.filePath(item.output.path, FilePath.filename(basename.name + item.output.icon_suffix, basename.ext))
+    
+                    if (item.icon_scale == item.output.icon_scale) {
+                        await FilePath.copyFile(path, output)
+                        continue
+                    }
 
-        if (metadata.format == 'svg') {
-            for (const next of this.nexts) {
-                await next.add(path)
+                    await file
+                        .resize({
+                            width: Math.round(metadata.width / item.icon_scale * item.output.icon_scale),
+                            height: Math.round(metadata.height / item.icon_scale * item.output.icon_scale)
+                        })
+                        .toFile(output)
+                }
+                return
             }
-            return
-        }
-
-        FilePath.copyToFolder(this.config.outputs.other, FilePath.basename(path))
         } catch (error) {
             console.log(`IconIterator: 无法解析 ${path}`)
         }
-    }
-
-    async dealImage3x(file: sharp.Sharp, path: string, metadata: sharp.Metadata, folder: string) {
-        FilePath.copyToFolder(folder, path)
-    }
-
-    async dealImage2x(file: sharp.Sharp, path: string, metadata: sharp.Metadata, folder: string) {
-        if (metadata.width == undefined) {
-            return
-        }
-
-        if (metadata.height == undefined) {
-            return
-        }
-
-        const output = FilePath.filePath(folder, FilePath.basename(path))
-
-        await file
-            .resize({
-                width: Math.round(metadata.width / 3 * 2),
-                height: Math.round(metadata.height / 3 * 2)
-            })
-            .toFile(output)
     }
 
     async finish() {

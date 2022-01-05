@@ -1,0 +1,124 @@
+{
+    "tasks": [
+        {
+            "inputs": [
+                "./assets/icons"
+            ],
+            "ignore": [
+                "./assets/icons/dui_analysis_icon.svg"
+            ],
+            "coverters": [
+                {
+                    "type": "gif",
+                    "output": {
+                        "type": "gif",
+                        "path": "./products/android/x3"
+                    }
+                },
+                {
+                    "type": "gif",
+                    "output": {
+                        "type": "gif",
+                        "path": "./products/ios/icon"
+                    }
+                },
+                {
+                    "type": "icon",
+                    "icon_scale": 3,
+                    "output": {
+                        "type": "icon",
+                        "path": "./products/android/x2",
+                        "icon_scale": 2
+                    }
+                },
+                {
+                    "type": "icon",
+                    "icon_scale": 3,
+                    "output": {
+                        "type": "icon",
+                        "path": "./products/android/x3",
+                        "icon_scale": 3
+                    }
+                },
+                {
+                    "type": "icon",
+                    "icon_scale": 3,
+                    "output": {
+                        "type": "icon",
+                        "path": "./products/ios/icon",
+                        "icon_scale": 2,
+                        "icon_suffix": "@2x"
+                    }
+                },
+                {
+                    "type": "icon",
+                    "icon_scale": 3,
+                    "output": {
+                        "type": "icon",
+                        "path": "./products/ios/icon",
+                        "icon_scale": 3,
+                        "icon_suffix": "@3x"
+                    }
+                },
+                {
+                    "type": "svg",
+                    "output": {
+                        "type": "vector_drawable",
+                        "path": "./products/android/vector_template"
+                    }
+                },
+                {
+                    "type": "svg",
+                    "output": {
+                        "type": "pdf",
+                        "path": "./products/ios/vector_template"
+                    }
+                },
+                {
+                    "type": "svg",
+                    "output": {
+                        "type": "iconfont",
+                        "path": "./products/flutter/iconfont"
+                    }
+                },
+                {
+                    "type": "svg",
+                    "output": {
+                        "type": "iconfont",
+                        "path": "./products/ios/iconfont",
+                        "iconfont_family_name": "khala_iconfont",
+                        "iconfont_font_name": "khala_iconfont"
+                    }
+                }
+            ]
+        },
+        {
+            "inputs": [
+                "./assets/patch9_2x"
+            ],
+            "coverters": [
+                {
+                    "type": "file",
+                    "output": {
+                        "type": "file",
+                        "path": "./products/android/x2"
+                    }
+                }
+            ]
+        },
+        {
+            "inputs": [
+                "./assets/patch9_3x"
+            ],
+            "coverters": [
+                {
+                    "type": "file",
+                    "output": {
+                        "type": "file",
+                        "path": "./products/android/x3"
+                    }
+                }
+            ]
+        }
+    ]
+}
