@@ -55,6 +55,15 @@ class FileIterator {
         if (stat.isDirectory()) {
             await this.scan(path)
         } else if (stat.isFile()) {
+
+            for (const lint of this.task.fileLints) {
+                const filename = FilePath.basename(path).name
+                const reg = new RegExp(lint.pattern, 'g')
+                if (reg.test(filename) == false) {
+                    return false
+                }
+            }
+
             if (this.coverters.length > 0) {
                 for (const coverter of this.coverters) {
                     await FilePath.copyToFolder(coverter.output.path, path)
@@ -70,10 +79,13 @@ class FileIterator {
     }
 
     validate(path: string): boolean {
+        const basename = FilePath.basename(path)
+
         /// 排除隐藏文件/目录
-        if (Path.basename(path).startsWith('.')) {
+        if (basename.full.startsWith('.')) {
             return false
         }
+
         /// 是否在排除列表
         for (const exclude of this.task.ignore) {
             if (path.startsWith(exclude)) {
