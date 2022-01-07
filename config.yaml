@@ -1,4 +1,6 @@
 ---
+report:
+  path: "./report/report.txt"
 tasks:
 - inputs:
   - "./assets/icons"
@@ -6,7 +8,7 @@ tasks:
   - "./assets/icons/dui_analysis_icon.svg"
   fileLints:
   - name: "文件名只能使用大小写字母下划线"
-    pattern: "^[a-zA-Z][0-9a-zA-Z\\_]+$"
+    pattern: "^[a-zA-Z][0-9a-zA-Z\\_]*$"
   coverters:
   - type: gif
     output:

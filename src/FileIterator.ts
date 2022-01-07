@@ -6,15 +6,19 @@ import IconTask from "./Config/IconTask";
 import Coverter from "./Config/Coverter";
 import CoverterType from "./Config/CoverterType";
 import CoverterOutputType from "./Config/CoverterOutputType";
+import { ReportHelper } from "./ReportHelper";
 
 class FileIterator {
 
     task: IconTask
-    coverters: Coverter[]
-    nexts: FileIteratorNext[]
 
-    constructor(task: IconTask, nexts: FileIteratorNext[]) {
+    private report: ReportHelper
+    private coverters: Coverter[]
+    private nexts: FileIteratorNext[]
+
+    constructor(task: IconTask, nexts: FileIteratorNext[], report: ReportHelper) {
         this.task = task
+        this.report = report
         this.nexts = nexts
         this.coverters = task.coverters.filter((item) => {
            return item.type == CoverterType.file && item.output.type == CoverterOutputType.file
@@ -60,6 +64,7 @@ class FileIterator {
                 const filename = FilePath.basename(path).name
                 const reg = new RegExp(lint.pattern, 'g')
                 if (reg.test(filename) == false) {
+                    this.report.fileLintFail(path, lint)
                     return false
                 }
             }

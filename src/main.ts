@@ -7,9 +7,11 @@ import fs from 'fs';
 import IconTask from './Config/IconTask';
 import Config from './Config/Config';
 import YAML from 'js-yaml'
+import { ReportHelper } from './ReportHelper';
 
 class Main {
 
+    report: ReportHelper
     config: Config
 
     constructor(yaml: string, json_path: string) {
@@ -22,6 +24,7 @@ class Main {
             json = JSON.parse(file)
         }
         this.config = new Config(json)
+        this.report = new ReportHelper(this.config.report)
     }
 
     async run() {
@@ -34,7 +37,7 @@ class Main {
         const svgFontIterator = new SVGFontIterator(task.coverters)
         const svgIterator = new SVGIterator(task.coverters)
         const iconIterator = new IconIterator(task.coverters, [svgIterator, svgFontIterator])
-        const fileIterator = new FileIterator(task, [iconIterator])
+        const fileIterator = new FileIterator(task, [iconIterator], this.report)
 
         await fileIterator.prepare()
         await fileIterator.run()
@@ -54,10 +57,15 @@ class Main {
         }
     }
 
+    async finish() {
+        this.report.output()
+    }
+
 }
 
 (async () => {
     const main = new Main('./config.yaml', './config.json')
     await main.prepare()
     await main.run()
+    await main.finish()
 })();
