@@ -9,19 +9,22 @@ import Config from './Config/Config';
 import YAML from 'js-yaml'
 import { ReportHelper } from './ReportHelper';
 
-class Main {
+export = class Main {
 
     report: ReportHelper
     config: Config
 
-    constructor(yaml: string, json_path: string) {
+    constructor(path: string) {
         var json: any
+        const file = fs.readFileSync(path).toString()
         try {
-            const file = fs.readFileSync(yaml).toString()
-            json = YAML.load(file)
-        } catch (error) {
-            const file = fs.readFileSync(json_path).toString()
             json = JSON.parse(file)
+        } catch (error) {
+            try {
+                json = YAML.load(file)
+            } catch (error) {
+                throw Error('input yaml or json file path')
+            }
         }
         this.config = new Config(json)
         this.report = new ReportHelper(this.config.report)
@@ -63,9 +66,3 @@ class Main {
 
 }
 
-(async () => {
-    const main = new Main('./config.yaml', './config.json')
-    await main.prepare()
-    await main.run()
-    await main.finish()
-})();

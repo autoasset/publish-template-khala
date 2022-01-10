@@ -1,6 +1,7 @@
 ---
 report:
-  path: "./report/report.txt"
+  mode: 'json'
+  path: "./report/report.json"
 tasks:
 - inputs:
   - "./assets/icons"

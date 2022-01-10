@@ -1,3 +1,5 @@
+import path from "path"
+
 export class KLJSON {
 
     value: any
@@ -47,6 +49,10 @@ export class KLJSON {
             return []
         }
         return value.filter(item => item).map(item => new KLJSON(item))
+    }
+
+    pathArrayValue(from: string): string[] {
+        return this.arrayValue(from).map(item => path.resolve(item.stringValue())).filter(item => item.length > 0)
     }
 
 }

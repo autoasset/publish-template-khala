@@ -1,5 +1,6 @@
 import CoverterOutputType from "./CoverterOutputType"
 import { KLJSON } from "./KLJSON"
+import path from "path"
 
 export = class CoverterOutput {
     /// 输出类型选项
@@ -18,7 +19,7 @@ export = class CoverterOutput {
 
     constructor(json: KLJSON, type: string, icon_scale: number) {
         this.type = CoverterOutputType.init(json.stringValue("type", type))
-        this.path = json.stringValue("path")
+        this.path = path.resolve(json.stringValue("path"))
 
         this.icon_scale = json.numberValue("icon_scale", icon_scale)
         this.icon_suffix = json.stringValue("icon_suffix")

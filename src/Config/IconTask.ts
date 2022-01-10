@@ -1,3 +1,4 @@
+import path from "path"
 import Coverter from "./Coverter"
 import FileLint from "./FileLints"
 import { KLJSON } from "./KLJSON"
@@ -14,8 +15,8 @@ export = class IconTask {
     fileLints: FileLint[]
 
     constructor(json: KLJSON) {
-        this.inputs = json.arrayValue("inputs").map(item => item.stringValue())
-        this.ignore = json.arrayValue("ignore").map(item => item.stringValue())
+        this.inputs = json.pathArrayValue("inputs")
+        this.ignore = json.pathArrayValue("ignore")
         this.coverters = json.arrayValue("coverters").map(item => new Coverter(item))
         this.fileLints = json.arrayValue("fileLints").flatMap((item) => {
             const element = FileLint.init(item)

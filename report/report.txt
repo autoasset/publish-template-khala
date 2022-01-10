@@ -1,7 +1,0 @@
-FileLint
-
-name: 文件名只能使用大小写字母下划线
-pattern: ^[a-zA-Z][0-9a-zA-Z\_]*$
-./assets/icons/1.svg
-./assets/icons/1test_name_space.svg
-./assets/icons/test_name_ space.svg

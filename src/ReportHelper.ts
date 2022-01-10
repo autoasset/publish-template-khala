@@ -1,9 +1,11 @@
 import FileLint from "./Config/FileLints";
 import Report from "./Config/Report";
 import FilePath from "./FilePath";
+import path from 'path'
 
 interface HumanMessage {
-    message(): string
+    human(): string[]
+    json(): object
 }
 
 class FileLintMessage implements HumanMessage {
@@ -15,19 +17,26 @@ class FileLintMessage implements HumanMessage {
         this.lint = lint
     }
 
-    message(): string {
-        var text = `name: ${this.lint.name}`
-        text += '\n'
-        text += `pattern: ${this.lint.pattern}`
-        text += '\n'
-        text += this.paths.join('\n')
-        return text
+    json(): object {
+        return {
+            name: this.lint.name,
+            pattern: this.lint.pattern,
+            paths: this.paths
+        }
+    }
+
+    human(): string[] {
+        return [
+            `lint: ${this.lint.name} | pattern: ${this.lint.pattern}`,
+            this.paths.map(item => `==> ${item}`).join('\n')
+        ]
     }
 }
 
-export class ReportHelper {
+export class ReportHelper implements HumanMessage {
 
     fileLints: Record<string, FileLintMessage> = {}
+    beginTime = new Date().getTime()
 
     report?: Report
 
@@ -35,7 +44,7 @@ export class ReportHelper {
         this.report = report
     }
 
-    fileLintFail(path: string, lint: FileLint) {
+    fileLintFail(file: string, lint: FileLint) {
         if (this.report == undefined) {
             return
         }
@@ -44,37 +53,60 @@ export class ReportHelper {
         if (!this.fileLints[key]) {
             this.fileLints[key] = new FileLintMessage(lint)
         }
-        this.fileLints[key].paths.push(path)
+        const filePath = path.relative(process.cwd(), file)
+        this.fileLints[key].paths.push(filePath)
     }
 
     output() {
-        if (this.report == undefined) {
+        if (!this.report) {
             return
         }
 
-        var text = ""
-
-        const message = this.fileLintsMessage()
-
-        if (message) {
-            text += message
+        if (this.report.mode == 'json') {
+            FilePath.write(this.report.path, JSON.stringify(this.json(), null, 4))
+        } else if (this.report.mode == 'human') {
+            FilePath.write(this.report.path, this.human().join('\n'))
         }
-
-        FilePath.write(this.report.path, text)
     }
 
-    fileLintsMessage(): string | undefined {
-        if (this.report == undefined || Object.keys(this.fileLints).length <= 0) {
-            return undefined
+    json(): object {
+        if (!this.report) {
+            return {}
         }
 
-        var text = "FileLint\n\n"
+        return {
+            'duration': this.duration(),
+            'fileLints': this.recordValues(this.fileLints).map(item => item.json())
+        }
+    }
 
-        for (const key in this.fileLints) {
-            text += this.fileLints[key].message()
-            text += "\n"
+    human(): string[] {
+        return [`duration: ${this.duration()}s`]
+            .concat(this.itemHuman('FileLints', this.fileLints))
+    }
+
+    duration(): number {
+        return (new Date().getTime() - this.beginTime) / 1000
+    }
+
+    itemHuman<T extends HumanMessage>(title: string, record?: Record<string, T>): string[] {
+        if (!record) {
+            return []
         }
 
-        return text
+        var list = this.recordValues(record).map(item => item.human()).flat()
+
+        if (list.length == 0) {
+            return []
+        }
+        return [title].concat(list)
+    }
+
+    recordValues<T extends HumanMessage>(record: Record<string, T>): T[] {
+        var list: T[] = []
+        for (const key in record) {
+            list.push(record[key])
+        }
+        return list
     }
 }
