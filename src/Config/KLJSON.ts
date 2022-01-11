@@ -13,34 +13,16 @@ export class KLJSON {
         return new KLJSON(value)
     }
 
+    booleanValue(from: string | undefined = undefined, placeholder: boolean = false): boolean {
+        return this.parseValue(from, placeholder)
+    }
+
     numberValue(from: string | undefined = undefined, placeholder: number = 0): number {
-
-        if (!from) {
-            return this.value.toString()
-        }
-
-        const value = this.value[from] as number
-
-        if (!value) {
-            return placeholder
-        }
-
-        return value
+        return this.parseValue(from, placeholder)
     }
 
     stringValue(from: string | undefined = undefined, placeholder: string = ""): string {
-
-        if (!from) {
-            return this.value.toString()
-        }
-
-        const value = this.value[from] as string
-
-        if (!value) {
-            return placeholder
-        }
-
-        return value
+        return this.parseValue(from, placeholder)
     }
 
     arrayValue(from: string): KLJSON[] {
@@ -53,6 +35,13 @@ export class KLJSON {
 
     pathArrayValue(from: string): string[] {
         return this.arrayValue(from).map(item => path.resolve(item.stringValue())).filter(item => item.length > 0)
+    }
+
+    private parseValue<T>(from: string | undefined = undefined, placeholder: T): T {
+        if (!from) {
+            return this.value as T ?? placeholder
+        }
+        return this.value[from] as T ?? placeholder
     }
 
 }

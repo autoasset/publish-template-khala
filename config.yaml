@@ -60,10 +60,12 @@ tasks:
   coverters:
   - type: file
     output:
+      file_excludes_same_name_with_different_suffixes: true
       path: "./products/android/x2"
 - inputs:
   - "./assets/patch9_3x"
   coverters:
   - type: file
     output:
+      file_excludes_same_name_with_different_suffixes: true
       path: "./products/android/x3"

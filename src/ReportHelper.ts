@@ -1,6 +1,6 @@
 import FileLint from "./Config/FileLints";
 import Report from "./Config/Report";
-import FilePath from "./FilePath";
+import FilePath from "./FilePath/FilePath";
 import path from 'path'
 
 interface HumanMessage {

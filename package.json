@@ -1,5 +1,5 @@
 {
-  "name": "node_typescript_vscode",
+  "name": "khala",
   "version": "1.0.0",
   "description": "",
   "bin": {
@@ -15,7 +15,7 @@
     "font-carrier": "^0.3.1",
     "js-yaml": "^4.1.0",
     "sharp": "^0.29.3",
-    "shelljs": "^0.8.4",
+    "svg-to-pdfkit": "^0.1.8",
     "svg2vectordrawable": "^2.7.1",
     "svgo": "^2.8.0",
     "ts-node": "^10.2.0",
@@ -25,7 +25,9 @@
     "@types/commander": "^2.12.2",
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^16.4.13",
+    "@types/pdfkit": "^0.12.3",
     "@types/sharp": "^0.29.4",
+    "@types/svg-to-pdfkit": "^0.1.0",
     "@types/svgo": "^2.6.0"
   }
 }

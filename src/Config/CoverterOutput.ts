@@ -7,15 +7,21 @@ export = class CoverterOutput {
     type: CoverterOutputType
     path: string
 
-    /// [iconfont] family 名
+    /// [iconfont] 配置
+    /// family 名
     iconfont_family_name: string
-    /// [iconfont] font 名
+    /// font 名
     iconfont_font_name: string
 
-    /// [icon] 缩放倍率
+    /// [icon] 配置
+    /// 缩放倍率
     icon_scale: number
-    /// [icon] 文件后缀
+    /// 文件后缀
     icon_suffix: string
+
+    /// [file]
+    /// 是否排除不同后缀名同名文件
+    file_excludes_same_name_with_different_suffixes: boolean
 
     constructor(json: KLJSON, type: string, icon_scale: number) {
         this.type = CoverterOutputType.init(json.stringValue("type", type))
@@ -26,5 +32,7 @@ export = class CoverterOutput {
 
         this.iconfont_family_name = json.stringValue("iconfont_family_name", "iconfont")
         this.iconfont_font_name = json.stringValue("iconfont_font_name", "iconfont")
+
+        this.file_excludes_same_name_with_different_suffixes = json.booleanValue("file_excludes_same_name_with_different_suffixes")
     }
 }
