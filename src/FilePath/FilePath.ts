@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import Path from "path";
 import FilePathScanResult from "./FilePathScanResult";
 import FilePathScanItemResult from './FilePathScanItemResult'
+import { constants } from "fs";
 
 export = class FilePath {
 
@@ -77,9 +78,26 @@ export = class FilePath {
         return Path.resolve(Path.dirname(path))
     }
 
+    static async exists(path: string): Promise<boolean> {
+        try {
+            await fs.access(path,  constants.F_OK)
+            return true
+        } catch (error) {
+            return false
+        }
+    }
+
     static async write(path: string, data: string | NodeJS.ArrayBufferView) {
         await this.createFolder(FilePath.folder(path))
         await fs.writeFile(path, data)
+    }
+
+    static async data(path: string): Promise<Buffer | undefined> {
+        try {
+            return await fs.readFile(path)
+        } catch (error) {
+            return undefined
+        }
     }
 
     static async createFolder(path: string) {

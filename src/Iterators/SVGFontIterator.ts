@@ -4,6 +4,8 @@ import FilePath from "../FilePath/FilePath";
 import Coverter from "../Config/Coverter";
 import CoverterOutputType from "../Config/CoverterOutputType";
 import CoverterType from "../Config/CoverterType";
+import { Md5 } from "ts-md5";
+import Cache from "../Cache/Cache";
 
 class Glyphs {
     name: string
@@ -11,17 +13,20 @@ class Glyphs {
     unicode_value: string
     unicode: string
     file: string
+    key: string
 
     constructor(name: string,
         font_class: string,
         unicode_value: string,
         unicode: string,
-        file: string) {
+        file: string,
+        key: string) {
         this.name = name
         this.font_class = font_class
         this.unicode = unicode
         this.unicode_value = unicode_value
         this.file = file
+        this.key = key
     }
 }
 
@@ -29,6 +34,7 @@ class SVGFontIterator implements SVGFileIteratorNext {
 
     coverters: Coverter[]
     glyphs: Glyphs[] = []
+    cache: Cache = new Cache()
 
     constructor(coverters: Coverter[]) {
         this.coverters = coverters.filter((item) => {
@@ -40,8 +46,8 @@ class SVGFontIterator implements SVGFileIteratorNext {
 
     }
 
-    public async add(file: string) {
-        await this.addGlyph(FilePath.basename(file).name, file)
+    async add(file: string, buffer: Buffer, key: string) {
+        await this.addGlyph(FilePath.basename(file).name, file, key)
     }
 
     public async finish() {
@@ -50,16 +56,39 @@ class SVGFontIterator implements SVGFileIteratorNext {
         }
     }
 
-    private async addGlyph(basename: string, file: string) {
+    private async addGlyph(basename: string, file: string, key: string) {
         const unicode = String.fromCharCode(0xe000 + this.glyphs.length)
         const unicodeHex = unicode.charCodeAt(0).toString(16)
-        this.glyphs.push(new Glyphs(basename, "iconfont", unicode, unicodeHex, file))
+        this.glyphs.push(new Glyphs(basename, "iconfont", unicode, unicodeHex, file, key))
     }
 
     private async output(folder: string, fontFamily: string, fontName: string) {
-        await this.writeTTF(folder, fontFamily, fontName)
-        await this.writeJSON(folder, fontFamily, fontName)
-        await this.writeHTML(folder, fontFamily, fontName)
+        const md5 = new Md5()
+        md5.appendStr(fontFamily)
+        md5.appendStr(fontName)
+        for (const glyph of this.glyphs) {
+            md5.appendStr(glyph.key)
+        }
+        const cacheKey = md5.end() as string
+        const ttf = await this.cache.value(cacheKey,`ttf-${fontFamily}-${fontName}`)
+
+        const ttfOutput = FilePath.filePath(folder, FilePath.filename("iconfont", "ttf"))
+        this.cache.useCacheByKey(cacheKey, `iconfont-ttf-${fontFamily}-${fontName}`, ttfOutput, async (complete) => {
+            await this.writeTTF(folder, fontFamily, fontName)
+            complete()
+        })
+
+        const jsonOutput = FilePath.filePath(folder, FilePath.filename("iconfont", "json"))
+        this.cache.useCacheByKey(cacheKey, `iconfont-json-${fontFamily}-${fontName}`, jsonOutput, async (complete) => {
+            await this.writeJSON(jsonOutput, fontFamily, fontName)
+            complete()
+        })
+
+        const htmlOutput = FilePath.filePath(folder, FilePath.filename("iconfont", "html"))
+        this.cache.useCacheByKey(cacheKey, `iconfont-html-${fontFamily}-${fontName}`, htmlOutput, async (complete) => {
+            await this.writeHTML(htmlOutput, fontFamily, fontName)
+            complete()
+        })
     }
 
     private async writeTTF(folder: string, fontFamily: string, fontName: string) {
@@ -78,8 +107,7 @@ class SVGFontIterator implements SVGFileIteratorNext {
         font.output({ path: path, types: ['ttf'] })
     }
 
-    private async writeJSON(folder: string, fontFamily: string, fontName: string) {
-        const path = FilePath.filePath(folder, FilePath.filename("iconfont", "json"))
+    private async writeJSON(path: string, fontFamily: string, fontName: string) {
         await fs.writeFile(path, JSON.stringify({
             font_family: fontFamily,
             font_name: fontName,
@@ -87,7 +115,7 @@ class SVGFontIterator implements SVGFileIteratorNext {
         }, null, 2))
     }
 
-    private async writeHTML(folder: string, fontFamily: string, fontName: string) {
+    private async writeHTML(path: string, fontFamily: string, fontName: string) {
         var HTML = `<style type="text/css">
         @font-face {
             font-family: '${fontFamily}';
@@ -110,7 +138,6 @@ class SVGFontIterator implements SVGFileIteratorNext {
             HTML += '\n<span class="iconfont">' + glyph.unicode_value + '</span>'
         }
 
-        const path = FilePath.filePath(folder, FilePath.filename("iconfont", "html"))
         await fs.writeFile(path, HTML)
     }
 

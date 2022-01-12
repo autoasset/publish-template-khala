@@ -4,11 +4,13 @@ import FilePath from "../FilePath/FilePath";
 import SVGFileIteratorNext from "./SVGFileIteratorNext";
 import Coverter from "../Config/Coverter";
 import CoverterType from "../Config/CoverterType";
+import Cache from "../Cache/Cache";
 
 class IconIterator implements FileIteratorNext {
 
     coverters: Record<string, Coverter[]>
     nexts: SVGFileIteratorNext[]
+    cache: Cache = new Cache()
 
     constructor(coverters: Coverter[], nexts: SVGFileIteratorNext[]) {
         this.coverters = {}
@@ -31,22 +33,32 @@ class IconIterator implements FileIteratorNext {
 
     async add(path: string) {
         try {
-            const file = sharp(path, { animated: true })
+
+            const buffer = await FilePath.data(path)
+            if (!buffer) {
+                throw new Error(`[khala] 文件存在问题 ${path}`)
+            }
+
+            const file = sharp(buffer, { animated: true })
             const metadata = await file.metadata()
 
             if (metadata.format == "svg") {
                 for (const next of this.nexts) {
-                    await next.add(path)
+                    const buffer = await FilePath.data(path)
+                    if (buffer) {
+                        
+                        await next.add(path, buffer, this.cache.key(buffer))
+                    }
                 }
                 return
-            } 
-            
+            }
+
             if (metadata.format == "gif") {
                 for (const item of this.coverters[CoverterType.gif.rawValue]) {
                     await FilePath.copyToFolder(item.output.path, path)
                 }
                 return
-            } 
+            }
 
             if ((metadata.format == 'png' || metadata.format == 'jpg' || metadata.format == 'jpeg') == false) {
                 throw new Error(`[khala] 图片格式无法解析 ${path}`)
@@ -55,7 +67,7 @@ class IconIterator implements FileIteratorNext {
             if (metadata.width == undefined || metadata.height == undefined) {
                 throw new Error(`[khala] 图片宽高存在问题 ${path}`)
             }
-            
+
             for (const item of this.coverters[CoverterType.icon.rawValue]) {
                 const basename = FilePath.basename(path)
                 const output = FilePath.filePath(item.output.path, FilePath.filename(basename.name + item.output.icon_suffix, basename.ext))
@@ -65,12 +77,13 @@ class IconIterator implements FileIteratorNext {
                     continue
                 }
 
-                await file
-                    .resize({
-                        width: Math.round(metadata.width / item.icon_scale * item.output.icon_scale),
-                        height: Math.round(metadata.height / item.icon_scale * item.output.icon_scale)
-                    })
-                    .toFile(output)
+                const width = Math.round(metadata.width / item.icon_scale * item.output.icon_scale)
+                const height = Math.round(metadata.height / item.icon_scale * item.output.icon_scale)
+
+                this.cache.useCache(buffer, 'icon-' + width.toString() + '-' + height.toString(), output, async (complete) => {
+                    await file.resize({ width: width, height: height }).toFile(output)
+                    complete()
+                })
             }
         } catch (error) {
             console.log(error)

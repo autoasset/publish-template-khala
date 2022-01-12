@@ -3,7 +3,7 @@ import SVGFileIteratorNext from "./SVGFileIteratorNext";
 import svg2vectordrawable from "svg2vectordrawable";
 import fs from "fs/promises";
 import FilePath from "../FilePath/FilePath";
-import { optimize } from "svgo"
+import { optimize, OptimizedSvg } from "svgo"
 import Coverter from "../Config/Coverter";
 import CoverterOutput from "../Config/CoverterOutput";
 import CoverterOutputType from "../Config/CoverterOutputType";
@@ -12,10 +12,12 @@ import sharp from 'sharp';
 import SVGtoPDF from 'svg-to-pdfkit'
 import PDFDocument from 'pdfkit'
 import console from "console";
+import Cache from "../Cache/Cache";
 
 class SVGIterator implements SVGFileIteratorNext {
 
     coverters: Coverter[]
+    cache: Cache = new Cache()
 
     private vectordrawableOptions = {
         floatPrecision: 3, // 数值精度，默认为 2
@@ -32,24 +34,24 @@ class SVGIterator implements SVGFileIteratorNext {
 
     }
 
-    public async add(file: string) {
-        const buffer = await this.compression(await fs.readFile(file))
+    async add(file: string, buffer: Buffer, key: string) {
         const basename = FilePath.basename(file).name
-
+        const compression = await this.compression(buffer, key)
         for (const coverter of this.coverters) {
             if (coverter.output.type == CoverterOutputType.pdf) {
-                await this.pdf(basename, coverter.output, await this.fixedMissiPtUnits(buffer), file)
+                await this.pdf(basename, coverter.output, compression, key)
             } else if (coverter.output.type == CoverterOutputType.vector_drawable) {
-                await this.vectordrawable(basename, coverter.output, buffer, file)
+                await this.vectordrawable(basename, coverter.output, compression, key)
             }
         }
+
     }
 
     public async finish() {
 
     }
 
-    private async pdf(basename: string, output: CoverterOutput, buffer: Buffer, filepath: string) {
+    private async pdf(basename: string, output: CoverterOutput, buffer: Buffer, cacheKey: string) {
         try {
             const filename = FilePath.filename(basename, 'pdf')
             const path = FilePath.filePath(output.path, filename)
@@ -59,33 +61,46 @@ class SVGIterator implements SVGFileIteratorNext {
             if (metadata.format != "svg") {
                 return
             }
-            if (!metadata.width) {
-                return
-            }
-            if (!metadata.height) {
-                return
-            }
 
-            const doc = new PDFDocument({
-                info: {
-                    CreationDate: new Date(756230400000)
-                }, 
-                size: [metadata.width, metadata.height]
+            this.cache.useCacheByKey(cacheKey, 'pdf', path, async (complete) => {
+                if (!metadata.width) {
+                    return
+                }
+                if (!metadata.height) {
+                    return
+                }
+
+                const doc = new PDFDocument({
+                    info: {
+                        CreationDate: new Date(756230400000)
+                    },
+                    size: [metadata.width, metadata.height]
+                })
+
+                const stream = require('fs').createWriteStream(path)
+                const fixedBuffer = await this.fixedMissiPtUnits(buffer)
+
+                stream.on('finish', async () => {
+                    complete()
+                })
+                SVGtoPDF(doc, fixedBuffer.toString(), 0, 0);
+                doc.pipe(stream);
+                doc.end();
             })
-            const stream = require('fs').createWriteStream(path)
-            SVGtoPDF(doc, buffer.toString(), 0, 0);
-            doc.pipe(stream);
-            doc.end();
+
         } catch (error) {
             console.log(`[khala] error: ${error}`)
         }
     }
 
-    private async vectordrawable(basename: string, output: CoverterOutput, buffer: Buffer, filepath: string) {
-        const xml = await svg2vectordrawable(buffer.toString(), this.vectordrawableOptions)
+    private async vectordrawable(basename: string, output: CoverterOutput, buffer: Buffer, cacheKey: string) {
         const filename = FilePath.filename(basename, 'xml')
         const path = FilePath.filePath(output.path, filename)
-        await fs.writeFile(path, xml)
+        this.cache.useCacheByKey(cacheKey, 'vectordrawable', path, async (complete) => {
+            const xml = await svg2vectordrawable(buffer.toString(), this.vectordrawableOptions)
+            await fs.writeFile(path, xml)
+            complete()
+        })
     }
 
     private async fixedMissiPtUnits(buffer: Buffer): Promise<Buffer> {
@@ -110,12 +125,20 @@ class SVGIterator implements SVGFileIteratorNext {
                 }
             ],
             js2svg: { pretty: true }
-        })
+        }) as OptimizedSvg
         return Buffer.from(result.data, 'utf8');
     }
 
-    private async compression(buffer: Buffer): Promise<Buffer> {
-        const result = optimize(buffer, {
+    private async compression(buffer: Buffer, cacheKey: string): Promise<Buffer> {
+        const option = 'svg-compression'
+        const cachePath = await this.cache.value(cacheKey, option)
+        if (cachePath) {
+            const result = await FilePath.data(cachePath)
+            if (result) {
+                return result
+            }
+        }
+        const result = Buffer.from((optimize(buffer, {
             path: undefined,
             plugins: [
                 "removeDoctype",
@@ -138,9 +161,10 @@ class SVGIterator implements SVGFileIteratorNext {
                 "removeScriptElement"
             ],
             js2svg: { pretty: true }
-        })
+        }) as OptimizedSvg).data, 'utf8');
 
-        return Buffer.from(result.data, 'utf8');
+        await this.cache.cache(result, cacheKey, option)
+        return result
     }
 
 }
