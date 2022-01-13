@@ -59,7 +59,7 @@ class FileIterator {
     }
 
     async forwardFile(file: FilePathScanItemResult) {
-        console.log(`[khala] 开始处理 ${file.full}`)
+        console.log(`[khala] 开始处理 ${FilePath.relativeCWD(file.full)}`)
         if (this.coverters.length == 0) {
             for (const next of this.nexts) {
                 await next.add(file.full)

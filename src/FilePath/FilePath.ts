@@ -44,11 +44,11 @@ export = class FilePath {
                 } else if (stat.isDirectory()) {
                     result.folders.push(new FilePathScanItemResult(name, fullPath))
                 } else {
-                    console.log(`[khala]: 无法识别的文件类型 ${fullPath}`)
+                    console.log(`[khala]: 无法识别的文件类型 ${FilePath.relativeCWD(fullPath)}`)
                 }
             }
         } else {
-            console.log(`[khala]: 无法识别的文件类型 ${input}`)
+            console.log(`[khala]: 无法识别的文件类型 ${FilePath.relativeCWD(input)}`)
         }
         return result
     }
@@ -111,5 +111,13 @@ export = class FilePath {
             }   
         }
     }
+
+    static relative(from: string, to: string): string {
+       return Path.relative(from, to)
+    }
+
+    static relativeCWD(to: string): string {
+        return FilePath.relative(process.cwd(), to)
+     }
 
 }
