@@ -43,6 +43,9 @@ tasks:
       path: "./products/android/vector_template"
   - type: svg
     output:
+      path: "./products/ios/svg"
+  - type: svg
+    output:
       type: pdf
       path: "./products/ios/vector_template"
   - type: svg

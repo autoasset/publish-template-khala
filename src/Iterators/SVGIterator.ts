@@ -42,6 +42,8 @@ class SVGIterator implements SVGFileIteratorNext {
                 await this.pdf(basename, coverter.output, compression, key)
             } else if (coverter.output.type == CoverterOutputType.vector_drawable) {
                 await this.vectordrawable(basename, coverter.output, compression, key)
+            } else if (coverter.output.type == CoverterOutputType.svg) {
+                await this.svg(basename, coverter.output, compression, key)
             }
         }
 
@@ -91,6 +93,14 @@ class SVGIterator implements SVGFileIteratorNext {
         } catch (error) {
             console.log(`[khala] error: ${error}`)
         }
+    }
+
+    private async svg(basename: string, output: CoverterOutput, buffer: Buffer, cacheKey: string) {
+        const filename = FilePath.filename(basename, 'svg')
+        const path = FilePath.filePath(output.path, filename)
+        this.cache.useCacheByKey(cacheKey, 'compression-svg', path, async (complete) => {
+            await fs.writeFile(path, buffer)
+        })
     }
 
     private async vectordrawable(basename: string, output: CoverterOutput, buffer: Buffer, cacheKey: string) {
