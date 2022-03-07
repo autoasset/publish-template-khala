@@ -10,6 +10,8 @@ tasks:
   fileLints:
   - name: "文件名只能使用大小写字母下划线"
     pattern: "^[a-zA-Z][0-9a-zA-Z\\_]*$"
+  - name: "文件名不能存在双下划线"
+    pattern: "^(?!.*__.*)[a-zA-Z][0-9a-zA-Z\\_]*$"
   coverters:
   - type: gif
     output:

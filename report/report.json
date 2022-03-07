@@ -1,5 +1,5 @@
 {
-    "duration": 0.428,
+    "duration": 1.779,
     "fileLints": [
         {
             "name": "文件名只能使用大小写字母下划线",
@@ -8,6 +8,13 @@
                 "assets/icons/1.svg",
                 "assets/icons/1test_name_space.svg",
                 "assets/icons/test_name_ space.svg"
+            ]
+        },
+        {
+            "name": "文件名不能存在双下划线",
+            "pattern": "^(?!.*__.*)[a-zA-Z][0-9a-zA-Z\\_]*$",
+            "paths": [
+                "assets/icons/test__svg.svg"
             ]
         }
     ]
