@@ -79,16 +79,10 @@ class SVGFontIterator implements SVGFileIteratorNext {
         })
 
         const jsonOutput = FilePath.filePath(folder, FilePath.filename("iconfont", "json"))
-        this.cache.useCacheByKey(cacheKey, `iconfont-json-${fontFamily}-${fontName}`, jsonOutput, async (complete) => {
-            await this.writeJSON(jsonOutput, fontFamily, fontName)
-            complete()
-        })
+        await this.writeJSON(jsonOutput, fontFamily, fontName)
 
         const htmlOutput = FilePath.filePath(folder, FilePath.filename("iconfont", "html"))
-        this.cache.useCacheByKey(cacheKey, `iconfont-html-${fontFamily}-${fontName}`, htmlOutput, async (complete) => {
-            await this.writeHTML(htmlOutput, fontFamily, fontName)
-            complete()
-        })
+        await this.writeHTML(htmlOutput, fontFamily, fontName)
     }
 
     private async writeTTF(folder: string, fontFamily: string, fontName: string) {
