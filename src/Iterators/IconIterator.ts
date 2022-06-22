@@ -46,7 +46,7 @@ class IconIterator implements FileIteratorNext {
                 for (const next of this.nexts) {
                     const buffer = await FilePath.data(path)
                     if (buffer) {
-                        
+
                         await next.add(path, buffer, this.cache.key(buffer))
                     }
                 }
@@ -72,16 +72,25 @@ class IconIterator implements FileIteratorNext {
                 const basename = FilePath.basename(path)
                 const output = FilePath.filePath(item.output.path, FilePath.filename(basename.name + item.output.icon_suffix, basename.ext))
 
-                if (item.icon_scale == item.output.icon_scale) {
-                    await FilePath.copyFile(path, output)
-                    continue
-                }
-
                 const width = Math.round(metadata.width / item.icon_scale * item.output.icon_scale)
                 const height = Math.round(metadata.height / item.icon_scale * item.output.icon_scale)
 
-                this.cache.useCache(buffer, 'icon-' + width.toString() + '-' + height.toString(), output, async (complete) => {
-                    await file.resize({ width: width, height: height }).toFile(output)
+                this.cache.useCache(buffer, 'v2-icon-' + width.toString() + '-' + height.toString(), output, async (complete) => {
+                    if (metadata.format == 'jpeg' || metadata.format == 'jpg') {
+                        await file
+                            .resize({ width: width, height: height })
+                            .jpeg({ mozjpeg: true })
+                            .toFile(output)
+                    } else if (metadata.format == 'png') {
+                        var options = file
+                            .png({ compressionLevel: 9, palette: true })
+                            .resize({ width: width, height: height })
+                        await options.toFile(output)
+                    } else {
+                        await file
+                            .resize({ width: width, height: height })
+                            .toFile(output)
+                    }
                     complete()
                 })
             }
