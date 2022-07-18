@@ -64,30 +64,32 @@ class SVGIterator implements SVGFileIteratorNext {
                 return
             }
 
-            this.cache.useCacheByKey(cacheKey, 'pdf', path, async (complete) => {
-                if (!metadata.width) {
-                    return
-                }
-                if (!metadata.height) {
-                    return
-                }
-
-                const doc = new PDFDocument({
-                    info: {
-                        CreationDate: new Date(756230400000)
-                    },
-                    size: [metadata.width, metadata.height]
+            await this.cache.useCacheByKey(cacheKey, 'pdf', path, () => {
+               return new Promise<void>(async (resolve) => {
+                    if (!metadata.width) {
+                        return
+                    }
+                    if (!metadata.height) {
+                        return
+                    }
+    
+                    const doc = new PDFDocument({
+                        info: {
+                            CreationDate: new Date(756230400000)
+                        },
+                        size: [metadata.width, metadata.height]
+                    })
+    
+                    const stream = require('fs').createWriteStream(path)
+                    const fixedBuffer = await this.fixedMissiPtUnits(buffer)
+    
+                    stream.on('finish', async () => {
+                        resolve()
+                    })
+                    SVGtoPDF(doc, fixedBuffer.toString(), 0, 0);
+                    doc.pipe(stream);
+                    doc.end();
                 })
-
-                const stream = require('fs').createWriteStream(path)
-                const fixedBuffer = await this.fixedMissiPtUnits(buffer)
-
-                stream.on('finish', async () => {
-                    complete()
-                })
-                SVGtoPDF(doc, fixedBuffer.toString(), 0, 0);
-                doc.pipe(stream);
-                doc.end();
             })
 
         } catch (error) {
@@ -98,19 +100,18 @@ class SVGIterator implements SVGFileIteratorNext {
     private async svg(basename: string, output: CoverterOutput, buffer: Buffer, cacheKey: string) {
         const filename = FilePath.filename(basename, 'svg')
         const path = FilePath.filePath(output.path, filename)
-        this.cache.useCacheByKey(cacheKey, 'compression-svg', path, async (complete) => {
+        await this.cache.useCacheByKey(cacheKey, 'compression-svg', path, (async () => {
             await fs.writeFile(path, buffer)
-        })
+        }))
     }
 
     private async vectordrawable(basename: string, output: CoverterOutput, buffer: Buffer, cacheKey: string) {
         const filename = FilePath.filename(basename, 'xml')
         const path = FilePath.filePath(output.path, filename)
-        this.cache.useCacheByKey(cacheKey, 'vectordrawable', path, async (complete) => {
+        await this.cache.useCacheByKey(cacheKey, 'vectordrawable', path, (async () => {
             const xml = await svg2vectordrawable(buffer.toString(), this.vectordrawableOptions)
             await fs.writeFile(path, xml)
-            complete()
-        })
+        }))
     }
 
     private async fixedMissiPtUnits(buffer: Buffer): Promise<Buffer> {

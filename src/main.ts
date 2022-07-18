@@ -31,9 +31,9 @@ export = class Main {
     }
 
     async run() {
-       for (const item of this.config.tasks) {
-             await this.runTask(item)
-       }
+        for (const item of this.config.tasks) {
+            await this.runTask(item)
+        }
     }
 
     async runTask(task: IconTask) {

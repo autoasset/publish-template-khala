@@ -47,11 +47,11 @@ export = class Cache {
         }
     }
 
-    async useCache(buffer: Buffer, option: string, output: string, cacheFileBlock: (complete: () => void) => void) {
+    async useCache(buffer: Buffer, option: string, output: string, cacheFileBlock: () => Promise<void>) {
         await this.useCacheByKey(this.key(buffer), option, output, cacheFileBlock)
     }
 
-    async useCacheByKey(key: string, option: string, output: string, cacheFileBlock: (complete: () => void) => void) {
+    async useCacheByKey(key: string, option: string, output: string, cacheFileBlock: () => Promise<void>) {
         const cacheKey = key
         const newIcon = await this.value(cacheKey, option)
         if (newIcon) {
@@ -61,8 +61,8 @@ export = class Cache {
             }
             return
         }
-        cacheFileBlock(async () => {
-            await this.cache(await FilePath.data(output), cacheKey, option)
-        })
+
+       await cacheFileBlock()
+       await this.cache(await FilePath.data(output), cacheKey, option)
     }
 }

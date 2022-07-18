@@ -38,11 +38,13 @@ khala -c ./config.yaml
 
 ### Coverters
 
-| **Optional** | **Parameters** | **Description**             |                  | **Default** |
-| ------------ | -------------- | --------------------------- | ---------------- | ----------- |
-| ❌            | type           | `gif`, `icon`,`svg`, `file` | string           |             |
-| ✅            | icon_scale     |                             | number           | 3           |
-| ✅            | output         | `CoverterOutput`            | `CoverterOutput` |             |
+| **Optional** | **Parameters**  | **Description**             |                  | **Default** |
+| ------------ | --------------- | --------------------------- | ---------------- | ----------- |
+| ❌            | type            | `gif`, `icon`,`svg`, `file` | string           |             |
+| ✅            | icon_scale      |                             | number           | 3           |
+| ✅            | output          | `CoverterOutput`            | `CoverterOutput` |             |
+| ✅            | minimum_quality | minimum png file quality    | number           | 0.8         |
+| ✅            | maximum_quality | maximum png file quality    | number           | 0.9         |
 
 ### CoverterOutput
 
@@ -80,6 +82,8 @@ tasks:
   - type: icon
     icon_scale: 3
     output:
+			minimum_quality: 0.7
+      maximum_quality: 0.8
       path: "./products/android/x2"
       icon_scale: 2
   - type: icon

@@ -5,12 +5,15 @@ import SVGFileIteratorNext from "./SVGFileIteratorNext";
 import Coverter from "../Config/Coverter";
 import CoverterType from "../Config/CoverterType";
 import Cache from "../Cache/Cache";
+import imageminPngquant from "imagemin-pngquant";
+import Temp from "../Cache/Temp";
 
 class IconIterator implements FileIteratorNext {
 
     coverters: Record<string, Coverter[]>
     nexts: SVGFileIteratorNext[]
     cache: Cache = new Cache()
+    temp: Temp = new Temp()
 
     constructor(coverters: Coverter[], nexts: SVGFileIteratorNext[]) {
         this.coverters = {}
@@ -33,7 +36,6 @@ class IconIterator implements FileIteratorNext {
 
     async add(path: string) {
         try {
-
             const buffer = await FilePath.data(path)
             if (!buffer) {
                 throw new Error(`[khala] 文件存在问题 ${path}`)
@@ -46,7 +48,6 @@ class IconIterator implements FileIteratorNext {
                 for (const next of this.nexts) {
                     const buffer = await FilePath.data(path)
                     if (buffer) {
-
                         await next.add(path, buffer, this.cache.key(buffer))
                     }
                 }
@@ -68,35 +69,49 @@ class IconIterator implements FileIteratorNext {
                 throw new Error(`[khala] 图片宽高存在问题 ${path}`)
             }
 
-            for (const item of this.coverters[CoverterType.icon.rawValue]) {
+            for (const coverter of this.coverters[CoverterType.icon.rawValue]) {
                 const basename = FilePath.basename(path)
-                const output = FilePath.filePath(item.output.path, FilePath.filename(basename.name + item.output.icon_suffix, basename.ext))
+                const output = FilePath.filePath(coverter.output.path, FilePath.filename(basename.name + coverter.output.icon_suffix, basename.ext))
 
-                const width = Math.round(metadata.width / item.icon_scale * item.output.icon_scale)
-                const height = Math.round(metadata.height / item.icon_scale * item.output.icon_scale)
-
-                this.cache.useCache(buffer, 'v2-icon-' + width.toString() + '-' + height.toString(), output, async (complete) => {
+                const width = Math.round(metadata.width / coverter.icon_scale * coverter.output.icon_scale)
+                const height = Math.round(metadata.height / coverter.icon_scale * coverter.output.icon_scale)
+                await this.cache.useCache(buffer, 'v3-icon-' + width.toString() + '-' + height.toString(), output, async () => {
                     if (metadata.format == 'jpeg' || metadata.format == 'jpg') {
                         await file
                             .resize({ width: width, height: height })
                             .jpeg({ mozjpeg: true })
                             .toFile(output)
                     } else if (metadata.format == 'png') {
-                        var options = file
-                            .png({ compressionLevel: 9, palette: true })
-                            .resize({ width: width, height: height })
-                        await options.toFile(output)
+                        await this.png(file, width, height, output, coverter);
                     } else {
                         await file
                             .resize({ width: width, height: height })
                             .toFile(output)
                     }
-                    complete()
                 })
             }
         } catch (error) {
             console.log(error)
         }
+    }
+
+    private async png(
+        file: sharp.Sharp,
+        width: number,
+        height: number,
+        dest: string,
+        coverter: Coverter) {
+        const options = file.resize({ width: width, height: height });
+        const buffer = await options.toBuffer();
+        const imagemin = (await import('imagemin')).buffer;
+        const data = await imagemin(buffer, {
+            plugins: [
+                imageminPngquant({
+                    quality: [coverter.output.minimum_quality, coverter.output.maximum_quality]
+                })
+            ]
+        });
+        await FilePath.write(dest, data);
     }
 
     async finish() {

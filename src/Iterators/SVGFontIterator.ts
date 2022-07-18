@@ -73,10 +73,9 @@ class SVGFontIterator implements SVGFileIteratorNext {
         const ttf = await this.cache.value(cacheKey,`ttf-${fontFamily}-${fontName}`)
 
         const ttfOutput = FilePath.filePath(folder, FilePath.filename("iconfont", "ttf"))
-        this.cache.useCacheByKey(cacheKey, `iconfont-ttf-${fontFamily}-${fontName}`, ttfOutput, async (complete) => {
+        await this.cache.useCacheByKey(cacheKey, `iconfont-ttf-${fontFamily}-${fontName}`, ttfOutput, (async () => {
             await this.writeTTF(folder, fontFamily, fontName)
-            complete()
-        })
+        }))
 
         const jsonOutput = FilePath.filePath(folder, FilePath.filename("iconfont", "json"))
         await this.writeJSON(jsonOutput, fontFamily, fontName)
