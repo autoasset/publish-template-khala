@@ -19,11 +19,6 @@ class SVGIterator implements SVGFileIteratorNext {
     coverters: Coverter[]
     cache: Cache = new Cache()
 
-    private vectordrawableOptions = {
-        floatPrecision: 3, // 数值精度，默认为 2
-        xmlTag: true // 添加 XML 文档声明标签，默认为 false
-    }
-
     constructor(coverters: Coverter[]) {
         this.coverters = coverters.filter((item) => {
             return item.type == CoverterType.svg && item.output.type != CoverterOutputType.iconfont
@@ -65,24 +60,24 @@ class SVGIterator implements SVGFileIteratorNext {
             }
 
             await this.cache.useCacheByKey(cacheKey, 'pdf', path, () => {
-               return new Promise<void>(async (resolve) => {
+                return new Promise<void>(async (resolve) => {
                     if (!metadata.width) {
                         return
                     }
                     if (!metadata.height) {
                         return
                     }
-    
+
                     const doc = new PDFDocument({
                         info: {
                             CreationDate: new Date(756230400000)
                         },
                         size: [metadata.width, metadata.height]
                     })
-    
+
                     const stream = require('fs').createWriteStream(path)
                     const fixedBuffer = await this.fixedMissiPtUnits(buffer)
-    
+
                     stream.on('finish', async () => {
                         resolve()
                     })
@@ -108,10 +103,16 @@ class SVGIterator implements SVGFileIteratorNext {
     private async vectordrawable(basename: string, output: CoverterOutput, buffer: Buffer, cacheKey: string) {
         const filename = FilePath.filename(basename, 'xml')
         const path = FilePath.filePath(output.path, filename)
-        await this.cache.useCacheByKey(cacheKey, 'vectordrawable', path, (async () => {
-            const xml = await svg2vectordrawable(buffer.toString(), this.vectordrawableOptions)
+        // await this.cache.useCacheByKey(cacheKey, 'vectordrawable', path, (async () => {
+            let xml = await svg2vectordrawable(buffer.toString(), {
+                // 数值精度，默认为 2
+                floatPrecision: 3,
+            })
+            if (xml.indexOf("Color=") == -1) {
+                xml = xml.replace('android:pathData=', "android:fillColor=\"#FFFFFFFF\"\n        android:pathData=")
+            }
             await fs.writeFile(path, xml)
-        }))
+        // }))
     }
 
     private async fixedMissiPtUnits(buffer: Buffer): Promise<Buffer> {
