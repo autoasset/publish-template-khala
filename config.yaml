@@ -28,6 +28,7 @@ tasks:
       icon_scale: 2
   - type: icon
     icon_scale: 3
+    enable_compression_minimum_size: 1024
     output:
       path: "./products/android/x3"
   - type: icon

@@ -56,6 +56,7 @@ khala -c ./config.yaml
 | ✅            | iconfont_font_name   | [iconfont] font name                                         | string | iconfont                    |
 | ✅            | icon_scale           |                                                              | number | same `coverter: icon_scale` |
 | ✅            | icon_suffix          |                                                              | string |                             |
+| ✅ | enable_compression_minimum_size | 该数值以下大小的 png 文件不会经过压缩 | string | 0 |
 
 ### Example:
 
@@ -82,7 +83,7 @@ tasks:
   - type: icon
     icon_scale: 3
     output:
-			minimum_quality: 0.7
+      minimum_quality: 0.7
       maximum_quality: 0.8
       path: "./products/android/x2"
       icon_scale: 2

@@ -75,7 +75,7 @@ class IconIterator implements FileIteratorNext {
 
                 const width = Math.round(metadata.width / coverter.icon_scale * coverter.output.icon_scale)
                 const height = Math.round(metadata.height / coverter.icon_scale * coverter.output.icon_scale)
-                await this.cache.useCache(buffer, 'v3-icon-' + width.toString() + '-' + height.toString(), output, async () => {
+                // await this.cache.useCache(buffer, 'v3-icon-' + width.toString() + '-' + height.toString(), output, async () => {
                     if (metadata.format == 'jpeg' || metadata.format == 'jpg') {
                         await file
                             .resize({ width: width, height: height })
@@ -88,7 +88,7 @@ class IconIterator implements FileIteratorNext {
                             .resize({ width: width, height: height })
                             .toFile(output)
                     }
-                })
+                // })
             }
         } catch (error) {
             console.log(error)
@@ -102,7 +102,13 @@ class IconIterator implements FileIteratorNext {
         dest: string,
         coverter: Coverter) {
         const options = file.resize({ width: width, height: height });
-        const buffer = await options.toBuffer();
+        const buffer = await options.png().toBuffer();
+
+        if (buffer.length <= coverter.enable_compression_minimum_size) {
+            await FilePath.write(dest, buffer);
+            return
+        }
+        
         const imagemin = (await import('imagemin')).buffer;
         const data = await imagemin(buffer, {
             plugins: [
