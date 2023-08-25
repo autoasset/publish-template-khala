@@ -1,10 +1,8 @@
 {
   "name": "khala",
-  "version": "1.1.5",
+  "version": "1.1.7",
   "description": "",
-  "bin": {
-    "khala": "./lib/cli-main.js"
-  },
+  "bin": "./lib/cli-main.js",
   "scripts": {
     "build": "tsc -p . && node ./lib/app-main.js"
   },
@@ -16,13 +14,14 @@
     "imagemin": "7.0.1",
     "imagemin-pngquant": "^9.0.2",
     "js-yaml": "^4.1.0",
-    "sharp": "0.30.7",
+    "sharp": "^0.32.5",
     "svg-to-pdfkit": "^0.1.8",
     "svg2vectordrawable": "^2.7.1",
     "svgo": "^2.8.0",
     "ts-md5": "^1.2.10",
     "ts-node": "^10.2.0",
-    "typescript": "^4.3.5"
+    "typescript": "^4.3.5",
+    "vd2svg": "^0.4.2"
   },
   "devDependencies": {
     "@types/commander": "^2.12.2",
@@ -30,8 +29,9 @@
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^16.4.13",
     "@types/pdfkit": "^0.12.3",
-    "@types/sharp": "^0.30.4",
+    "@types/sharp": "^0.32.0",
     "@types/svg-to-pdfkit": "^0.1.0",
     "@types/svgo": "^2.6.0"
-  }
+  },
+  "packageManager": "yarn@3.6.3"
 }

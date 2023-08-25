@@ -42,6 +42,7 @@
 declare module 'http' {
     import * as stream from 'node:stream';
     import { URL } from 'node:url';
+    import { EventEmitter } from 'node:events';
     import { TcpSocketConnectOpts, Socket, Server as NetServer, LookupFunction } from 'node:net';
     // incoming headers will never contain number
     interface IncomingHttpHeaders extends NodeJS.Dict<string | string[]> {
@@ -1136,9 +1137,9 @@ declare module 'http' {
      * ```
      * @since v0.3.4
      */
-    class Agent {
+    class Agent extends EventEmitter {
         /**
-         * By default set to 256\. For agents with `keepAlive` enabled, this
+         * By default set to 256. For agents with `keepAlive` enabled, this
          * sets the maximum number of sockets that will be left open in the free
          * state.
          * @since v0.11.7
@@ -1465,6 +1466,32 @@ declare module 'http' {
      */
     function get(options: RequestOptions | string | URL, callback?: (res: IncomingMessage) => void): ClientRequest;
     function get(url: string | URL, options: RequestOptions, callback?: (res: IncomingMessage) => void): ClientRequest;
+
+    /**
+     * Performs the low-level validations on the provided name that are done when `res.setHeader(name, value)` is called.
+     * Passing illegal value as name will result in a TypeError being thrown, identified by `code: 'ERR_INVALID_HTTP_TOKEN'`.
+     * @param name Header name
+     * @since v14.3.0
+     */
+    function validateHeaderName(name: string): void;
+    /**
+     * Performs the low-level validations on the provided value that are done when `res.setHeader(name, value)` is called.
+     * Passing illegal value as value will result in a TypeError being thrown.
+     * - Undefined value error is identified by `code: 'ERR_HTTP_INVALID_HEADER_VALUE'`.
+     * - Invalid value character error is identified by `code: 'ERR_INVALID_CHAR'`.
+     * @param name Header name
+     * @param value Header value
+     * @since v14.3.0
+     */
+    function validateHeaderValue(name: string, value: string): void;
+
+    /**
+     * Set the maximum number of idle HTTP parsers. Default: 1000.
+     * @param count
+     * @since v18.8.0, v16.18.0
+     */
+    function setMaxIdleHTTPParsers(count: number): void;
+
     let globalAgent: Agent;
     /**
      * Read-only property specifying the maximum allowed size of HTTP headers in bytes.

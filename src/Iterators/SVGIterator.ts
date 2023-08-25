@@ -109,7 +109,7 @@ class SVGIterator implements SVGFileIteratorNext {
                 floatPrecision: 3,
             })
             if (xml.indexOf("Color=") == -1) {
-                xml = xml.replace('android:pathData=', "android:fillColor=\"#FFFFFFFF\"\n        android:pathData=")
+                xml = xml.replace('android:pathData=', "android:fillColor=\"#FF333333\"\n        android:pathData=")
             }
             await fs.writeFile(path, xml)
         // }))
