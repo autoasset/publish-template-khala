@@ -25,6 +25,10 @@ export class KLJSON {
         return this.parseValue(from, placeholder)
     }
 
+    string(from: string | undefined = undefined): string | undefined {
+        return this.parse(from)
+    }
+
     arrayValue(from: string): KLJSON[] {
         const value = this.value[from] as any[]
         if (!value) {
@@ -38,10 +42,13 @@ export class KLJSON {
     }
 
     private parseValue<T>(from: string | undefined = undefined, placeholder: T): T {
-        if (!from) {
-            return this.value as T ?? placeholder
-        }
-        return this.value[from] as T ?? placeholder
+        return this.parse(from) ?? placeholder
     }
 
+    private parse<T>(from: string | undefined = undefined): T | undefined {
+        if (!from) {
+            return this.value as T
+        }
+        return this.value[from] as T
+    }
 }

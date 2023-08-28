@@ -70,7 +70,7 @@ class SVGFontIterator implements SVGFileIteratorNext {
             md5.appendStr(glyph.key)
         }
         const cacheKey = md5.end() as string
-        const ttf = await this.cache.value(cacheKey,`ttf-${fontFamily}-${fontName}`)
+        const ttf = await this.cache.mixedKey(cacheKey,`ttf-${fontFamily}-${fontName}`)
 
         const ttfOutput = FilePath.filePath(folder, FilePath.filename("iconfont", "ttf"))
         await this.cache.useCacheByKey(cacheKey, `iconfont-ttf-${fontFamily}-${fontName}`, ttfOutput, (async () => {

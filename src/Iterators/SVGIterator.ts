@@ -143,7 +143,7 @@ class SVGIterator implements SVGFileIteratorNext {
 
     private async compression(buffer: Buffer, cacheKey: string): Promise<Buffer> {
         const option = 'svg-compression'
-        const cachePath = await this.cache.value(cacheKey, option)
+        const cachePath = await this.cache.mixedKey(cacheKey, option)
         if (cachePath) {
             const result = await FilePath.data(cachePath)
             if (result) {
@@ -175,7 +175,7 @@ class SVGIterator implements SVGFileIteratorNext {
             js2svg: { pretty: true }
         }) as OptimizedSvg).data, 'utf8');
 
-        await this.cache.cache(result, cacheKey, option)
+        await this.cache.set(result, cacheKey, option)
         return result
     }
 
