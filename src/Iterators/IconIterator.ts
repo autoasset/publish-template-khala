@@ -5,7 +5,6 @@ import Coverter from "../Config/Coverter";
 import CoverterType from "../Config/CoverterType";
 import CoverterOutputType from "../Config/CoverterOutputType";
 import Cache from "../Cache/Cache";
-import imageminPngquant from "imagemin-pngquant";
 import Temp from "../Cache/Temp";
 import sharp from "sharp";
 
@@ -77,7 +76,7 @@ class IconContext {
                 })
                 .toBuffer()
 
-            if (buffer.length <= this.coverter.enable_compression_minimum_size) {
+            if (this.coverter.enable_compression_minimum_size <= 0 || buffer.length <= this.coverter.enable_compression_minimum_size) {
                 return buffer
             }
 
@@ -100,7 +99,7 @@ class IconContext {
                 })
                 .toBuffer()
 
-            if (buffer.length <= this.coverter.enable_compression_minimum_size) {
+            if (this.coverter.enable_compression_minimum_size <= 0 || buffer.length <= this.coverter.enable_compression_minimum_size) {
                 return buffer
             } else {
                 return await this.file
@@ -118,20 +117,16 @@ class IconContext {
         const kind: keyof sharp.FormatEnum = 'png'
         const buffer = await this.cache.tryGet(this.cache_key, kind + '-' + this.cache_option, async () => {
             const buffer = await this.file.png().toBuffer();
-            if (buffer.length <= this.coverter.enable_compression_minimum_size) {
+
+            if (this.coverter.enable_compression_minimum_size <= 0 || buffer.length <= this.coverter.enable_compression_minimum_size) {
                 return buffer
             }
-            const imagemin = (await import('imagemin')).buffer;
-            return await imagemin(buffer, {
-                plugins: [
-                    imageminPngquant({
-                        quality: [
-                            this.coverter.output.minimum_quality,
-                            this.coverter.output.maximum_quality
-                        ]
-                    })
-                ]
+
+            return await this.file
+            .png({
+                quality: this.coverter.output.maximum_quality * 100
             })
+            .toBuffer()
         })
         return new IconBuffer(buffer, kind)
     }

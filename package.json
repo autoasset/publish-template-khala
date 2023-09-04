@@ -1,6 +1,6 @@
 {
   "name": "khala",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "",
   "bin": "./lib/cli-main.js",
   "scripts": {
@@ -12,7 +12,6 @@
     "commander": "^8.3.0",
     "font-carrier": "^0.3.1",
     "imagemin": "7.0.1",
-    "imagemin-pngquant": "^9.0.2",
     "js-yaml": "^4.1.0",
     "sharp": "^0.32.5",
     "svg-to-pdfkit": "^0.1.8",
@@ -25,7 +24,6 @@
   },
   "devDependencies": {
     "@types/commander": "^2.12.2",
-    "@types/imagemin": "7.0.1",
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^16.4.13",
     "@types/pdfkit": "^0.12.3",
