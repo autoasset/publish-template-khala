@@ -11,15 +11,18 @@ import CoverterType from "../Config/CoverterType";
 import sharp from 'sharp';
 import SVGtoPDF from 'svg-to-pdfkit'
 import PDFDocument from 'pdfkit'
-import console from "console";
+import console, { error } from "console";
 import Cache from "../Cache/Cache";
+import { ReportError, ReportHelper } from "../ReportHelper";
 
 class SVGIterator implements SVGFileIteratorNext {
 
+    private report: ReportHelper
     coverters: Coverter[]
     cache: Cache = new Cache()
 
-    constructor(coverters: Coverter[]) {
+    constructor(coverters: Coverter[], report: ReportHelper) {
+        this.report = report
         this.coverters = coverters.filter((item) => {
             return item.type == CoverterType.svg && item.output.type != CoverterOutputType.iconfont
         })
@@ -33,15 +36,18 @@ class SVGIterator implements SVGFileIteratorNext {
         const basename = FilePath.basename(file).name
         const compression = await this.compression(buffer, key)
         for (const coverter of this.coverters) {
-            if (coverter.output.type == CoverterOutputType.pdf) {
-                await this.pdf(basename, coverter.output, compression, key)
-            } else if (coverter.output.type == CoverterOutputType.vector_drawable) {
-                await this.vectordrawable(basename, coverter.output, compression, key)
-            } else if (coverter.output.type == CoverterOutputType.svg) {
-                await this.svg(basename, coverter.output, compression, key)
+            try {
+                if (coverter.output.type == CoverterOutputType.pdf) {
+                    await this.pdf(basename, coverter.output, compression, key)
+                } else if (coverter.output.type == CoverterOutputType.vector_drawable) {
+                    await this.vectordrawable(basename, coverter.output, compression, key)
+                } else if (coverter.output.type == CoverterOutputType.svg) {
+                    await this.svg(basename, coverter.output, compression, key)
+                }
+            } catch (error) {
+                this.report.errors.push(new ReportError(FilePath.basename(file).full, `svg 转换 ${coverter.output.type.rawValue} 时失败, 请使用 figma 重新生成 svg 文件`))
             }
         }
-
     }
 
     public async finish() {
@@ -49,47 +55,44 @@ class SVGIterator implements SVGFileIteratorNext {
     }
 
     private async pdf(basename: string, output: CoverterOutput, buffer: Buffer, cacheKey: string) {
-        try {
-            const filename = FilePath.filename(basename, 'pdf')
-            const path = FilePath.filePath(output.path, filename)
+        const filename = FilePath.filename(basename, 'pdf')
+        const path = FilePath.filePath(output.path, filename)
 
-            const file = sharp(buffer)
-            const metadata = await file.metadata()
-            if (metadata.format != "svg") {
-                return
-            }
-
-            await this.cache.useCacheByKey(cacheKey, 'pdf', path, () => {
-                return new Promise<void>(async (resolve) => {
-                    if (!metadata.width) {
-                        return
-                    }
-                    if (!metadata.height) {
-                        return
-                    }
-
-                    const doc = new PDFDocument({
-                        info: {
-                            CreationDate: new Date(756230400000)
-                        },
-                        size: [metadata.width, metadata.height]
-                    })
-
-                    const stream = require('fs').createWriteStream(path)
-                    const fixedBuffer = await this.fixedMissiPtUnits(buffer)
-
-                    stream.on('finish', async () => {
-                        resolve()
-                    })
-                    SVGtoPDF(doc, fixedBuffer.toString(), 0, 0);
-                    doc.pipe(stream);
-                    doc.end();
-                })
-            })
-
-        } catch (error) {
-            console.log(`[khala] error: ${error}`)
+        const file = sharp(buffer)
+        const metadata = await file.metadata()
+        if (metadata.format != "svg") {
+            return
         }
+
+        await this.cache.useCacheByKey(cacheKey, 'pdf', path, () => {
+            return new Promise<void>(async (resolve) => {
+                if (!metadata.width) {
+                    return
+                }
+                if (!metadata.height) {
+                    return
+                }
+
+                const doc = new PDFDocument({
+                    info: {
+                        CreationDate: new Date(756230400000)
+                    },
+                    size: [metadata.width, metadata.height]
+                })
+
+                const stream = require('fs').createWriteStream(path)
+                const fixedBuffer = await this.fixedMissiPtUnits(buffer)
+
+                stream.on('finish', async () => {
+                    resolve()
+                })
+                SVGtoPDF(doc, fixedBuffer.toString(), 0, 0);
+                doc.pipe(stream);
+                doc.end();
+            })
+        })
+
+
     }
 
     private async svg(basename: string, output: CoverterOutput, buffer: Buffer, cacheKey: string) {
@@ -103,16 +106,14 @@ class SVGIterator implements SVGFileIteratorNext {
     private async vectordrawable(basename: string, output: CoverterOutput, buffer: Buffer, cacheKey: string) {
         const filename = FilePath.filename(basename, 'xml')
         const path = FilePath.filePath(output.path, filename)
-        // await this.cache.useCacheByKey(cacheKey, 'vectordrawable', path, (async () => {
-            let xml = await svg2vectordrawable(buffer.toString(), {
-                // 数值精度，默认为 2
-                floatPrecision: 3,
-            })
-            if (xml.indexOf("Color=") == -1) {
-                xml = xml.replace('android:pathData=', "android:fillColor=\"#FF333333\"\n        android:pathData=")
-            }
-            await fs.writeFile(path, xml)
-        // }))
+        let xml = await svg2vectordrawable(buffer.toString(), {
+            // 数值精度，默认为 2
+            floatPrecision: 3,
+        })
+        if (xml.indexOf("Color=") == -1) {
+            xml = xml.replace('android:pathData=', "android:fillColor=\"#FF333333\"\n        android:pathData=")
+        }
+        await fs.writeFile(path, xml)
     }
 
     private async fixedMissiPtUnits(buffer: Buffer): Promise<Buffer> {

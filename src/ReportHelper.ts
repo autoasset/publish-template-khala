@@ -7,6 +7,32 @@ interface HumanMessage {
     json(): object
 }
 
+export class ReportError implements HumanMessage {
+
+    path: string
+    message: string
+
+    constructor(path: string, message: string) {
+        this.path = path
+        this.message = message
+    }
+
+    human(): string[] {
+        return [
+            this.path,
+            this.message
+        ]
+    }
+
+    json(): object {
+       return {
+            path: this.path,
+            message: this.message
+        }
+    }
+
+}
+
 class FileLintMessage implements HumanMessage {
 
     paths: string[] = []
@@ -36,7 +62,7 @@ export class ReportHelper implements HumanMessage {
 
     fileLints: Record<string, FileLintMessage> = {}
     beginTime = new Date().getTime()
-
+    errors: ReportError[] = []
     report?: Report
 
     constructor(report?: Report) {
@@ -75,13 +101,15 @@ export class ReportHelper implements HumanMessage {
 
         return {
             'duration': this.duration(),
-            'fileLints': this.recordValues(this.fileLints).map(item => item.json())
+            'fileLints': this.recordValues(this.fileLints).map(item => item.json()),
+            'errors': this.errors
         }
     }
 
     human(): string[] {
         return [`duration: ${this.duration()}s`]
             .concat(this.itemHuman('FileLints', this.fileLints))
+            .concat(this.errors.map((item) => item.message))
     }
 
     duration(): number {

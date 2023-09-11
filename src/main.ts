@@ -38,7 +38,7 @@ export = class Main {
 
     async runTask(task: IconTask) {
         const svgFontIterator = new SVGFontIterator(task.coverters)
-        const svgIterator = new SVGIterator(task.coverters)
+        const svgIterator = new SVGIterator(task.coverters, this.report)
         const iconIterator = new IconIterator(task.coverters, [svgIterator, svgFontIterator])
         const fileIterator = new FileIterator(task, [iconIterator], this.report)
 
