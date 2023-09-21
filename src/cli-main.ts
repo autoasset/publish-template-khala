@@ -3,7 +3,7 @@ import Main from './main'
 import { Command } from 'commander';
 
 const program = new Command()
-    .version('1.2.2', '-v, --version', 'output the current version')
+    .version('1.2.4', '-v, --version', 'output the current version')
     .option('-c, --config <config>', 'config path')
     .parse(process.argv);
 
