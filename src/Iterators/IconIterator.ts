@@ -190,9 +190,13 @@ class IconIterator implements FileIteratorNext {
             }
 
             var file = sharp(buffer, { animated: true })
-            const metadata = await file.metadata()
-
-            if (metadata.format == undefined) {
+            var metadata: sharp.Metadata
+            try {
+                metadata = await file.metadata()
+                if (metadata.format == undefined) {
+                    return
+                }
+            } catch (error) {
                 return
             }
 
