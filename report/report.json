@@ -1,5 +1,5 @@
 {
-    "duration": 1.431,
+    "duration": 0.942,
     "fileLints": [
         {
             "name": "文件名只能使用大小写字母下划线",
@@ -17,5 +17,14 @@
             ]
         }
     ],
-    "errors": []
+    "errors": [
+        {
+            "path": "ic_new_ask_scale_small",
+            "message": "IconFont 转换 ic_new_ask_scale_small 时失败, 请使用 figma 重新生成 svg 文件, 注意清除不必要的图层"
+        },
+        {
+            "path": "ic_new_ask_scale_small",
+            "message": "IconFont 转换 ic_new_ask_scale_small 时失败, 请使用 figma 重新生成 svg 文件, 注意清除不必要的图层"
+        }
+    ]
 }

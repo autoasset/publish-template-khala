@@ -6,6 +6,7 @@ import CoverterOutputType from "../Config/CoverterOutputType";
 import CoverterType from "../Config/CoverterType";
 import { Md5 } from "ts-md5";
 import Cache from "../Cache/Cache";
+import { ReportError, ReportHelper } from "../ReportHelper";
 
 class Glyphs {
     name: string
@@ -32,11 +33,13 @@ class Glyphs {
 
 class SVGFontIterator implements SVGFileIteratorNext {
 
+    private report: ReportHelper
     coverters: Coverter[]
     glyphs: Glyphs[] = []
     cache: Cache = new Cache()
 
-    constructor(coverters: Coverter[]) {
+    constructor(coverters: Coverter[], report: ReportHelper) {
+        this.report = report
         this.coverters = coverters.filter((item) => {
             return item.type == CoverterType.svg && item.output.type == CoverterOutputType.iconfont
         })
@@ -70,7 +73,7 @@ class SVGFontIterator implements SVGFileIteratorNext {
             md5.appendStr(glyph.key)
         }
         const cacheKey = md5.end() as string
-        const ttf = await this.cache.mixedKey(cacheKey,`ttf-${fontFamily}-${fontName}`)
+        const ttf = await this.cache.mixedKey(cacheKey, `ttf-${fontFamily}-${fontName}`)
 
         const ttfOutput = FilePath.filePath(folder, FilePath.filename("iconfont", "ttf"))
         await this.cache.useCacheByKey(cacheKey, `iconfont-ttf-${fontFamily}-${fontName}`, ttfOutput, (async () => {
@@ -91,9 +94,19 @@ class SVGFontIterator implements SVGFileIteratorNext {
         font.options.id = fontName;
         font.setFontface(ttfOptions);
 
+        var set = new Map<string, boolean>();
         for (const glyph of this.glyphs) {
-            const data = await fs.readFile(glyph.file)
-            font.setSvg(glyph.unicode_value, data.toString())
+            try {
+                console.log(`[khala] IconFont: 正在处理 ${glyph.name}`)
+                const data = await fs.readFile(glyph.file)
+                font.setSvg(glyph.unicode_value, data.toString())
+            } catch {
+                if (!set.has(glyph.name)) {
+                    set.set(glyph.name, true)
+                    console.log(`[khala] IconFont: 失败 ${glyph.name}`)
+                    this.report.errors.push(new ReportError(glyph.name, `IconFont 转换 ${glyph.name} 时失败, 请使用 figma 重新生成 svg 文件, 注意清除不必要的图层`))
+                }
+            }
         }
 
         const path = FilePath.filePath(folder, FilePath.filename("iconfont", ""))
