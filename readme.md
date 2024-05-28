@@ -3,20 +3,25 @@
 **Khala** is a Node.js-based tool for processing and optimizing mobile graphics files.
 
 ## Installation
+### Docker:
+  ```shell
+  docker run islinhey/khala  -c ./config.yaml 
+  ```
 
-```shell
-npm -g install khala
-```
-or
-```shell
-yarn global add khala
-```
+### Node:
+  ```shell
+  npm -g install khala
+  ```
+  or
+  ```shell
+  yarn global add khala
+  ```
 
-## CLI usage
+  ## CLI usage
 
-```shell
-khala -c ./config.yaml
-```
+  ```shell
+  khala -c ./config.yaml
+  ```
 
 ## Configuration
 
